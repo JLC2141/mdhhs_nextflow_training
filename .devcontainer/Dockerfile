@@ -22,7 +22,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pigz \
     unzip \
     perl \
-    default-jre \
     ca-certificates \
     libgomp1 \
     curl \
