@@ -14,7 +14,8 @@ LABEL maintainer.email="chodkowskij@michigan.gov"
 
 
 # install dependencies; cleanup apt garbage
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     python3 \
     python3-distutils \
     python3-pip \
@@ -25,8 +26,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libgomp1 \
     curl \
+    tzdata \
     openjdk-17-jdk \
     procps && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    locale-gen en_US.UTF-8 && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/* && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
