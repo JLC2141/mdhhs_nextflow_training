@@ -24,6 +24,7 @@ RUN apt-get update && \
     wget \
     pigz \
     unzip \
+    locales \
     perl \
     ca-certificates \
     libgomp1 \
