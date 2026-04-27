@@ -3,6 +3,8 @@
 FROM ubuntu:focal as app
 
 ARG SRATOOLKIT_VER="3.3.0"
+ARG TZ=US/Michigan
+ENV TZ=$TZ
 
 # metadata
 LABEL base.image="ubuntu:focal"
