@@ -2,6 +2,7 @@
 # The 'as' keyword lets you name the following stage. We use `app` for the production image
 FROM ubuntu:focal as app
 
+ARG SRATOOLKIT_VER="3.3.0"
 
 # metadata
 LABEL base.image="ubuntu:focal"
