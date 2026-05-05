@@ -1,6 +1,7 @@
 # FROM defines the base docker image. 
 # The 'as' keyword lets you name the following stage. We use `app` for the production image
-FROM ubuntu:focal as app
+#FROM ubuntu:focal as app
+FROM ubuntu:24.04 
 
 ARG SRATOOLKIT_VER="3.3.0"
 
@@ -37,8 +38,6 @@ RUN wget -q https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRATOOLKIT_VER}/sratool
 
 
 RUN useradd -m -s /bin/bash vscode 
-
-#CMD ["spades.py", "--help"]
 
 # set PATH and working directory
 ENV PATH="$PATH:/sratoolkit.${SRATOOLKIT_VER}-ubuntu64/bin"
