@@ -2,13 +2,13 @@
 # The 'as' keyword lets you name the following stage. We use `app` for the production image
 
 ARG NXT_VER="26.04.0"
-ARG NF_CORE_VER="4.0.2"
+#ARG NF_CORE_VER="4.0.2"
 ARG SRATOOLKIT_VER="3.3.0"
 
 FROM ubuntu:24.04 
 
 ARG NXT_VER
-ARG NF_CORE_VER
+#ARG NF_CORE_VER
 ARG SRATOOLKIT_VER
 
 # metadata
@@ -68,7 +68,7 @@ RUN curl -fsSL https://github.com/nextflow-io/nextflow/releases/download/v${NXT_
     /usr/local/bin/nextflow -version
 
 # Install nf-core tools
-RUN pip3 install nf-core==${NF_CORE_VER}
+RUN pip install nf-core
 
 RUN useradd -m -s /bin/bash vscode 
 
