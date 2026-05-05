@@ -13,6 +13,7 @@
             "moby": true,
         }
     },
+	"postCreateCommand": "./sample_download.sh"
 }
 	
 
