@@ -22,18 +22,38 @@ LABEL maintainer.email="chodkowskij@michigan.gov"
 
 # install dependencies; cleanup apt garbage
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    autoconf \
+    automake \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    curl \
+    gcc \
+    git \
+    help2man \
+    libbz2-dev \
+    libcurl4-gnutls-dev \
+    libdeflate-dev \
+    libgomp1 \
+    liblzma-dev \
+    libncurses5-dev \
+    libssl-dev \
+    libtool \
+    locales \
+    make \
+    nasm \
+    openjdk-17-jdk \
+    perl \
+    pigz \
+    procps \
     python3 \
     python3-pip \
-    build-essential \
-    wget \
-    pigz \
+    sudo \
     unzip \
-    perl \
-    default-jre \
-    ca-certificates \
-    libgomp1 \
-    curl \
-    procps && \
+    wget \
+    yasm \
+    zlib1g-dev && \
+    locale-gen en_US.UTF-8 && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 
