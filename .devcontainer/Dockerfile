@@ -17,7 +17,6 @@ LABEL maintainer.email="chodkowskij@michigan.gov"
 # install dependencies; cleanup apt garbage
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
-    python3-distutils \
     python3-pip \
     wget \
     pigz \
