@@ -24,6 +24,7 @@ LABEL maintainer.email="chodkowskij@michigan.gov"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
+    build-essential \
     wget \
     pigz \
     unzip \
@@ -47,7 +48,7 @@ RUN curl -fsSL https://github.com/nextflow-io/nextflow/releases/download/v${NXT_
     /usr/local/bin/nextflow -version
 
 # Install nf-core tools
-RUN pip install nf-core==${NF_CORE_VER}
+RUN pip3 install nf-core==${NF_CORE_VER}
 
 RUN useradd -m -s /bin/bash vscode 
 
