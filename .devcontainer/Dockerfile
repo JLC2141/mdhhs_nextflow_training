@@ -28,8 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     curl \
     procps && \
-    apt-get autoclean && rm -rf /var/lib/apt/lists/* && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+    apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 
 #install SRAtoolkit
