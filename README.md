@@ -1,8 +1,8 @@
 # mdhhs_nextflow_training
-Training material for nextflow
+Example nextflow analysis
 
-# Run the install script to install nextflow and nf-core
+# Run the following analysis script to start the nf-core/demo workflow
 
 ```
-./installations.sh
+bash analysis.sh
 ```
