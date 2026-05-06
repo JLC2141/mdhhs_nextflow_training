@@ -20,42 +20,21 @@ LABEL maintainer="John Chodkowski"
 LABEL maintainer.email="chodkowskij@michigan.gov"
 
 
-# install dependencies; cleanup apt garbage
+# install dependencies; 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    autoconf \
-    automake \
     build-essential \
-    bzip2 \
-    ca-certificates \
-    curl \
-    gcc \
-    git \
-    help2man \
-    libbz2-dev \
-    libcurl4-gnutls-dev \
-    libdeflate-dev \
-    libgomp1 \
-    liblzma-dev \
-    libncurses5-dev \
-    libssl-dev \
-    libtool \
-    locales \
-    make \
-    nasm \
-    openjdk-17-jdk \
-    perl \
-    pigz \
-    procps \
     python3 \
     python3-pip \
-    sudo \
-    unzip \
     wget \
-    yasm \
-    zlib1g-dev && \
-    locale-gen en_US.UTF-8 && \
+    pigz \
+    unzip \
+    perl \
+    default-jre \
+    ca-certificates \
+    libgomp1 \
+    curl \
+    procps && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
-
 
 # Install SRAtoolkit
 RUN wget -q https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRATOOLKIT_VER}/sratoolkit.${SRATOOLKIT_VER}-ubuntu64.tar.gz &&\
