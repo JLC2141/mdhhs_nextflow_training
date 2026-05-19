@@ -6,3 +6,4 @@ Example nextflow analysis
 ```
 bash analysis.sh
 ```
+
