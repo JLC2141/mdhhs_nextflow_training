@@ -39,7 +39,14 @@ workflow MYFIRSTPIPELINE {
     //
     // MODULE: Run FASTP read trimming
     //
-    FASTP()
+    FASTP(
+        ch_samplesheet,
+        false,
+        false,
+        false
+    )
+    ch_trimmed_reads = FASTP.out.trimmed_reads
+    ch_trimmed_reads.view()
     
     //
     // Collate and save software versions
