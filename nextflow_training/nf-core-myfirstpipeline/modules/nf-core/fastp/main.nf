@@ -1,6 +1,6 @@
 process FASTP {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_low'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
@@ -8,13 +8,13 @@ process FASTP {
 :         'community.wave.seqera.io/library/fastp:1.3.6--4df8d6c11b471bde' }"
 
     input:
-    tuple val(meta), path(reads), path(adapter_fasta)
+    tuple val(meta), path(reads)
     val   discard_trimmed_pass
     val   save_trimmed_fail
     val   save_merged
 
     output:
-    tuple val(meta), path('*.fastp.fastq.gz') , optional:true, emit: reads
+    tuple val(meta), path('*.fastp.fastq.gz') , optional:true, emit: trimmed_reads
     tuple val(meta), path('*.json')           , emit: json
     tuple val(meta), path('*.html')           , emit: html
     tuple val(meta), path('*.log')            , emit: log
@@ -28,7 +28,6 @@ process FASTP {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
     def fail_fastq = save_trimmed_fail && meta.single_end ? "--failed_out ${prefix}.fail.fastq.gz" : save_trimmed_fail && !meta.single_end ? "--failed_out ${prefix}.paired.fail.fastq.gz --unpaired1 ${prefix}_R1.fail.fastq.gz --unpaired2 ${prefix}_R2.fail.fastq.gz" : ''
     def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fastp.fastq.gz" : "--out1 ${prefix}_R1.fastp.fastq.gz" )
     def out_fq2 = discard_trimmed_pass ?: "--out2 ${prefix}_R2.fastp.fastq.gz"
@@ -44,7 +43,6 @@ process FASTP {
             --thread $task.cpus \\
             --json ${prefix}.fastp.json \\
             --html ${prefix}.fastp.html \\
-            $adapter_list \\
             $fail_fastq \\
             $args \\
             2>| >(tee ${prefix}.fastp.log >&2) \\
@@ -60,7 +58,6 @@ process FASTP {
             --thread $task.cpus \\
             --json ${prefix}.fastp.json \\
             --html ${prefix}.fastp.html \\
-            $adapter_list \\
             $fail_fastq \\
             $args \\
             2>| >(tee ${prefix}.fastp.log >&2)
@@ -77,7 +74,6 @@ process FASTP {
             $out_fq2 \\
             --json ${prefix}.fastp.json \\
             --html ${prefix}.fastp.html \\
-            $adapter_list \\
             $fail_fastq \\
             $merge_fastq \\
             --thread $task.cpus \\
