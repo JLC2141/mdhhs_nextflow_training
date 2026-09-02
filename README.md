@@ -144,7 +144,7 @@ Your pipeline should have completed by now. If so, you should see the following:
 
 ### Exploring the nf-core-demo results
 
-You should see the "Pipeline completed successfully message" along with additional time information. And if you list the contents the results directory, you will it populated with our results:
+You should see the "Pipeline completed successfully message" along with additional time information. And if you list the contents the results directory, it will be populated with our results:
 
 1) fastqc - results from read QC assessment
 2) fq - the SEQTK trimmed FASTQ files
@@ -155,6 +155,7 @@ You should see the "Pipeline completed successfully message" along with addition
     - [trace file](https://docs.seqera.io/nextflow/reports#trace-file): detailed task metrics
     - [workflow diagram](https://docs.seqera.io/nextflow/reports#workflow-diagram): graphical visualization of a pipeline run
     - software_mqc_versions.yml: provides pipleine, nextflow, and tool versions
+    - Notice how some of the pipeline info files have the trace report suffix specified at pipeline launch. 
 
 Go ahead and download the multiqc report:
 
