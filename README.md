@@ -61,7 +61,8 @@ If you do not see the terminal, press F1. You'll be prompted on the search bar. 
 Okay, let's run our first nextflow pipeline! But first, we need to retrieve our FASTQ files. Run the following command on your terminal:
 
 ```
-bash sample_download.sh
+java -version
+bash -version
 ```
 
 > [!NOTE] <br>
