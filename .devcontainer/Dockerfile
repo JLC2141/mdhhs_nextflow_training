@@ -36,23 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-# Install SRAtoolkit
-RUN wget -q https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRATOOLKIT_VER}/sratoolkit.${SRATOOLKIT_VER}-ubuntu64.tar.gz &&\
-    tar -xvf sratoolkit.${SRATOOLKIT_VER}-ubuntu64.tar.gz && rm sratoolkit.${SRATOOLKIT_VER}-ubuntu64.tar.gz
-
-# Install Nextflow
-RUN curl -fsSL https://github.com/nextflow-io/nextflow/releases/download/v${NXT_VER}/nextflow \
-        -o /usr/local/bin/nextflow && \
-    chmod +x /usr/local/bin/nextflow && \
-    /usr/local/bin/nextflow -version
-
-# Install nf-core tools
-RUN pip3 install --break-system-packages nf-core==${NF_CORE_VER}
-
 RUN useradd -m -s /bin/bash vscode 
 
 # set PATH and working directory
-ENV PATH="$PATH:/sratoolkit.${SRATOOLKIT_VER}-ubuntu64/bin"
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
