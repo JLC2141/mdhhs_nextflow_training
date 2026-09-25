@@ -13,6 +13,7 @@
             "moby": true,
         }
     },
+	"postCreateCommand": "sudo chown -R root:vscode /usr/local/bin && sudo chmod -R g+w /usr/local/bin"
 }
 	
 
