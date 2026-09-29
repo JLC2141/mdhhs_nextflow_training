@@ -411,7 +411,13 @@ mv SRR3747659_2.fastq.gz SRR3747659_R2_001.fastq.gz
 Return to the `launchDir` directory (`/workspaces/mdhhs_nextflow_training`) and try re-running the script
 
 ```
+#Returning to the launchDir, from /workspaces/mdhhs_nextflow_training/reads/
 cd ..
+```
+
+Rerun the samplesheet creation script:
+
+```
 python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
 ```
 
@@ -665,7 +671,7 @@ In other words, this command will loop through each of these files individually 
 
 <br>
 
-So in the nextflow pipeline script for SEQTK each raw FASTQ file gets trimmed, piped to gzip, and renamed. 
+So in the nextflow pipeline script for SEQTK, each raw FASTQ file gets trimmed, piped to gzip, and renamed. 
 
 Okay, so hopefully that provides you a little insight into the nextflow resume feature. The checkpoints provided by resume are particularly useful if your pipeline fails halfway through an analysis and you want to restart your pipeline without having to re-analyze everything from the beginning. 
 
