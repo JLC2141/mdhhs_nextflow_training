@@ -98,8 +98,8 @@ Great! Open source java (openjdk) is v21 and bash is v5. We have what we need to
 <br>
 
 > [!NOTE] <br>
-> The previous instruction was contained within a code block. I encourage you to type the commands yourself throughout the tutorial but, <br>
-> if you fall behind or prefer convenience, then use these code blocks to copy and paste the commands into your codespaces terminal.
+> The previous instruction was contained within a code block. In your own time, I encourage you to type the commands yourself but, <br>
+> for purposes of convenience, feel free to use the code blocks to copy and paste the commands into your codespaces terminal.
 
 For example, navigate back to the GitHub repo, [here](https://github.com/JLC2141/mdhhs_nextflow_training). 
 
@@ -319,10 +319,10 @@ fasterq-dump SRR3747659
 
 > [!NOTE] <br>
 > fasterq-dump is a more up-to-date command compared to fastq-dump, but in contrast to fastq-dump, 
-> fasterq-dump does not have a built in --gzip option. So we need to perform this ourselves.
+> fasterq-dump does not have a built in --gzip/pigz option. So we need to perform this ourselves.
 
 ```
-gzip *.fastq
+pigz *.fastq
 ```
 
 ![fasterq dump](images/fasterq_dump.png)
