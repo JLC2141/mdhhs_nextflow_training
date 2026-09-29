@@ -477,7 +477,7 @@ ctrl+s
 > I apologize that we're getting a bit into the weeds here but this will all become clearer in the following tutorials <br>
 > For now, I just want to get the pipeline running so we can explore nextflow outputs and basic functionality before we start building our own nextflow pipeline in the remaining tutorials
 
-### Reattempt nextflow pipeline execution explore the `nextflow run` command
+### Reattempt nextflow pipeline execution and explore the `nextflow run` command
 
 Now again, from our launch directory (`launchDir`), `/workspaces/mdhhs_nextflow_training`, let's try to run the pipeline again: 
 
