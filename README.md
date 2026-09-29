@@ -1,16 +1,28 @@
 # Table of contents
 - [Overview](#-overview)
 - [Tutorial 1](#-tutorial-1)
-- [Part I](#part-i-exploring-nextflow-pipeline-execution-and-exploring-results)
+- [Part I](#part-i-launching-codespace-and-installing-tools)
 - [Part II](#part-ii-obtaining-a-pipeline-from-nf-core-command-line-interface-cli-and-preparing-a-run)
-- [Part III](#part-iii-obtaining-a-cdc-pipeline-from-github-and-performing-a-test-run)
+- [Part III](#part-iii-creating-your-first-nextflow-pipeline-with-nf-core-cli)
+- [Recap](#recap)
 
 
 # 📖 Overview
 
+In session 1 of this tutorial series, we will learn how to obtain pre-built pipelines from the community and run them. 
+
+Learning objectives:
+
+* Understand how to install nextflow and associated tools
+* Download an nf-core pipeline and prepare the components needed to run the nextflow pipeline
+* Explore and familiarize yourself with nextflow outputs and functionality
+* Experience and troubleshoot nextflow errors
+* Creating a new nextflow pipeline with nf-core CLI
+
 # 📖 Tutorial 1
 
-# Part I: Exploring nextflow pipeline execution and exploring results   
+
+# Part I: Launching codespace and installing tools
 
 ### Launching the nextflow tutorial on GitHub Codespaces
 
@@ -20,10 +32,10 @@ Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com
 
 ![Launching codespaces](images/launch_codespace.png)
 
-Select the green <> Code icon, the Codespaces tab, the ellipsis, and then select "New with options...". 
+Select the branch icon on the left. It should currently say `main`. Select `tutorial_1` and the page should reload. Once confirmed, select the green <> Code icon, the Codespaces tab, the ellipsis, and then select "New with options...". 
 
 
-Make sure that the branch selection is "main". Select the options for "Machine type". Select the 2-core option but before you do, take note of the virtual machine (VM) that we're about to create. 
+Make sure that the branch selection is `tutorial_1`. Select the options for "Machine type". Select the 2-core option but before you do, take note of the virtual machine (VM) that we're about to create. 
 
 ![Codespace options](images/codespace_options.png)
 
@@ -56,246 +68,187 @@ If you do not see the terminal, press F1. You'll be prompted on the search bar. 
 > [!NOTE] <br>
 > The greater-than symbol is needed in order to switch from file search mode to command mode.
 
-### Sample download and running the nf-core-demo pipeline
+<br>
 
-Okay, let's run our first nextflow pipeline! But first, we need to retrieve our FASTQ files. Run the following command on your terminal:
+Alright! Our codespace is properly loaded. Let's install what we need to start using nextflow.
+
+<br>
+
+### Installing Nextflow
+
+Instructions for installing nextflow can be found, [here](https://docs.seqera.io/nextflow/install)
+
+Requirements prior to nextflow installation include:
+
+1. Java 17 (or later, up to 26)
+2. Bash 3.2 (or later) 
+
+These have already been installed for you but let's confirm the versions:
 
 ```
 java -version
 bash -version
 ```
 
+![Java Bash versions](images/java_bash_versions.png)
+
+
+Great! Open source java (openjdk) is v21 and bash is v5. We have what we need to install nextflow!
+
+<br>
+
 > [!NOTE] <br>
 > The previous instruction was contained within a code block. I encourage you to type the commands yourself throughout the tutorial but, <br>
 > if you fall behind or prefer convenience, then use these code blocks to copy and paste the commands into your codespaces terminal.
 
-For example, navigate back to the GitHub repo, [here](https://github.com/JLC2141/mdhhs_nextflow_training). Right-click on the README.md file and open it in a new tab. 
+For example, navigate back to the GitHub repo, [here](https://github.com/JLC2141/mdhhs_nextflow_training). 
 
-Locate the previous code block in the README.md file. 
+![README](images/read_me.png)
+
+**Make sure you select the `tutorial_1` branch**. When the page reloads, it automatically loads the README.md file in the webpage.
+
+> [!NOTE] <br>
+> This README.md file is also organized for asynchronous learning. <br>
+
+Scroll down and locate the previous code block in the README.md file. 
 
 ![Code block](images/copy_code.png)
 
-You can click on the icon at the right of the code block to copy, and then paste the code in your terminal. 
+You can click on the icon at the right of the code block to copy the code, and then paste the code in your terminal. 
 
-Alright, it looks like our FASTQ files have been downloaded. We can confirm this by listing the contents within the reads/ directory:
+<br>
 
-```
-ls reads
-```
+Back to the tutorial:
 
-![Sample download](images/sample_download.png)
-
-
-Awesome! Now, all we need to do to start the nextflow demo pipeline is the following:
+Use the curl command to retrieve the nextflow executable: 
 
 ```
-bash analysis.sh
+curl -s https://get.nextflow.io | bash
 ```
 
-Nextflow should launch:
-
-![Nextflow launch](images/nextflow_launch.png)
-
-We see a number of things upon the launch:
-
-1) The nextflow version and a message providing the pipeline we launched,
-2) Input/output options
-    * We see an input samplesheet and a results out directory specified
-3) Generic options
-    * A time stamp to trace some of the output reports
-4) Core Nextflow options
-    * runName: randomly assigned. Here, I was given "deadly_leavitt"
-        - A unique session ID is provided with each nextflow run. Nextflow provides a human-readable name to simplify referencing it
-    * containerEngine: nextflow supports various [engines](https://docs.seqera.io/nextflow/container#container-runtimes) but the most common are docker and apptainer
-    * launchDir: path to where we launched the pipeline from
-    * workDir: path to where the work directory was created. We'll touch on this concept in a second
-    * projectDir: path to the nextflow pipeline of interest
-    * userName: Your user name. This was assigned to you during this tutorial creation. We'll address this later. 
-    * profile: redundant with containerEngine but this is also an input parameter specfied when we submit the command to run nextflow
-    * configFiles: we will learn about [configuration files](https://docs.seqera.io/nextflow/config) in subsequent lessons, but briefly, these allow you to control how your pipeline runs without changing the underlying code. 
-
-### Exploring the nextflow run command
-
-Take a look at the bash script we just ran to start this nextflow pipeline: 
-
-![Bash nextflow](images/bash_nextflow.png)
-
-This was the command we used to the launch the nextflow pipeline. At the bare minimum, a nextflow pipeline requires:
-
-1) nextflow run
-    * the execution command
-2) the pipeline of interest that we want to run (nf-core-demo/_1.1.0)
-3) The profile core option, specifying a containerEngine (-profile docker)
-4) The input samplesheet.csv file, providing the paths to the FASTQ files (--input samplesheet.csv)
-    * select this samplesheet in the file explorer panel and see for yourself
-5) An out directory (outdir) where we want to write the results (--outdir results)
-
-> [!NOTE] <br>
-> The profile option has 1 dash while the input and outdir parameters have 2 dashes. 
-> Nextflow core options contain 1 dash. This affects the behavior of nextflow itself. 
-> Pipeline parameters, that affect a single workflow, is specified with 2 dashes. 
-> We'll explore another nextflow core option in a second. 
-
-You may be asking yourself why this demo pipeline is named as nf-core, short for nextflow-core. Briefly, [nf-core](https://nf-co.re/docs/get_started/nf-core) is a global community setting strict, best practices for building nextflow pipelines. Not only do they have a curation of community-built [pipelines](https://nf-co.re/pipelines/) freely available for the public to use, they also have command line interface (CLI) that one can use to obtain nf-core pipelines (as we'll see in Part II) and build nextflow pipelines (as we'll make use of for the remaining tutorials part of this training series).
-
-Your pipeline should have completed by now. If so, you should see the following:
-
-![Pipeline complete](images/pipeline_complete.png)
-
-
-### Exploring the nf-core-demo results
-
-You should see the "Pipeline completed successfully message" along with additional time information. And if you list the contents the results directory, it will be populated with our results:
-
-1) fastqc - results from read QC assessment
-2) fq - the SEQTK trimmed FASTQ files
-3) multiqc - collation of results from individual tools into a report
-4) pipeline_info - a directory containing various reports and files including:
-    - [execution report](https://docs.seqera.io/nextflow/reports#execution-report): pipeline run information
-    - [execution timeline](https://docs.seqera.io/nextflow/reports#execution-timeline): timelines of tasks in pipeline
-    - [trace file](https://docs.seqera.io/nextflow/reports#trace-file): detailed task metrics
-    - [workflow diagram](https://docs.seqera.io/nextflow/reports#workflow-diagram): graphical visualization of a pipeline run
-    - software_mqc_versions.yml: provides pipleine, nextflow, and tool versions
-    - Notice how some of the pipeline info files have the trace report suffix specified at pipeline launch. 
-
-Go ahead and download the multiqc report:
-
-![MultiQC](images/multi_qc.png)
-
-> [!NOTE] <br>
-> When you right-click the file, you may need to toggle through the menus with the "Esc" key in order to see the "Download" option. 
-
-Explore this file. We see that we have a report of the FASTQC results from our two FASTQ files. As you will see, more complex pipelines have larger multiQC reports providing summary results from tools used during the analysis. 
-
-Now, on your pipeline completion message, you should also notice the letters and numbers just below the word, "executor". For example, in the image shown above, three separate lines, for each tool run in the pipeline, appears to have unique characters assigned to those tasks. Let's explore what this is. 
-
-### Exploring Nextflow's resume feature
-
-Re-open the analysis.sh file and edit the file to look as such:
-
-![Adding resume](images/adding_resume.png)
-
-Here we:
-1. added a "\" line separator to the --outdir line
-2. Added the -resume nextflow core option
-    * Remember: 1 dash because it's a core option, not a parameter that we're changing in the pipeline
-
-
-Save the file: 
+You should now see `nextflow` in your current directory (`/workspaces/mdhhs_nextflow_training`). Let's make it executable:
 
 ```
-ctrl+s
+chmod +x nextflow
 ```
 
-And restart the pipeline. What do you notice?
-
-![Resume pipeline](images/resume_pipeline.png)
-
-Tasks for FASTQC and SEQTK_TRIM say cached. And what you would notice, if this pipeline was much more computationally intensive, is that the pipeline would complete much faster. Because effectively, what the "cached" means is that that task was saved in a manner that doesn't require a re-analysis upon a pipeline re-run. 
-
-This nextflow [resume feature](https://docs.seqera.io/nextflow/cache-and-resume) is permitted through the combination of the task cache and work directory.
-    - The task cache is stored in launchDir/.nextflow/cache/, organized by session ID. This directory stores metadata associated with your pipeline run
-    - The work directory, launchDir/work/, stores the actual files associated with the task. The directories are organized by the unique hash associated with the task
-
-For example, let's explore the SEQTK_TRIM task within the work directory. Within the work directory, the unique hash, created from a MD5 checksum, always starts with a two-character prefix followed by the remainder of the hash in a subdirectory. My hash, based on the image above, starts with 2e/74ea6b. Yours will be different. Navigate to your SEQTK_TRIM task within the work directory and display the contents of the directory:
+Now, for organizational purposes, we will move the nextflow executable into a `.local/bin/` directory within our `HOME` directory. 
 
 ```
-cd work/yourHashTo/seqtk_trim
-#list contents
-ls
-#list in long format
-ll
+mkdir -p $HOME/.local/bin/
+mv nextflow $HOME/.local/bin/
 ```
 
-![SEQTK_TRIM workdir](images/seqtk_work.png)
-
-We notice that the full hash actually consists of 32 hexadecimal characters. And using the long list command, we see that the input files came from our reads/ directory, which results in the trimmed FASTQ file outputs. 
-
-Challenge: compare the file sizes of the trimmed FASTQ files to the raw FASTQ files to really convince yourself that SRR3747659_SRR3747659_R1_001.fastq.gz and SRR3747659_SRR3747659_R2_001.fastq.gz are the trimmed reads. 
-
-We can see the actual command that was run by looking at the .command.sh file
+Let's attempt to see what nextflow version we downloaded:
 
 ```
-cat .command.sh
+nextflow -version
 ```
 
-![.command.sh file](images/command.sh.png)
+Ah, an error: 
 
-From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the very basic usage of the seqtk trimfq command is as follow:
+![Nextflow version error](images/nextflow_version_error.png)
 
-![SEQTK trimfq](images/seqtk_trimfq.png)
-
-Which is exactly what is occurring in our nextflow pipeline, except with a little more bells and whistles to the command itself. Try copying and pasting the following command into your terminal. 
+The command is not found even though we confirmed that it's in our `$HOME/.local/bin` directory. Take a moment to think why this is happening. For example, see if this works:
 
 ```
-printf "%s\n" SRR3747659_R1_001.fastq.gz SRR3747659_R2_001.fastq.gz | while read f; 
-do
-    echo $f;
-done
+$HOME/.local/bin/nextflow -version
 ```
-
-What is the output?
 
 <details>
 <summary>Reveal solution, here</summary>
-SRR3747659_R1_001.fastq.gz
-SRR3747659_R2_001.fastq.gz
 
-In other words, this command will loop through each of these files individually and execute the command that follows.
+If we just want to use the nextflow executable without providing the full path, then we need to make sure that the path to the nextflow executable (`$HOME/.local/bin`) is in our `$PATH` variable. Let's check:  
+
+```
+echo $PATH
+```
+
+![echo $PATH](images/echo_path.png)
+
+
+You see, it is not currently there and therefore not an automatically searchable path. Let's add the path to the nextflow executable to our `$PATH` variable.  
+
+```
+export PATH="$PATH:$HOME/.local/bin"
+```
+
+And then re-check the nextflow version only using `nextflow` without the full path.
+
+```
+nextflow -version
+```
+
+![Nextflow version](images/nextflow_version.png)
+
+Great, it works! Nextflow is now installed!
+
 </details>
 
-So each raw FASTQ file gets trimmed, piped to gzip, and renamed. 
-
-Okay, so hopefully that provides you a little insight into the nextflow resume feature. The checkpoints provided by resume are particularly useful if your pipeline fails halfway through an analysis and you want to restart your pipeline without having to re-analyze everything from the beginning. 
-
-> [!TIP] <br>
-> Work directories can take up a lot of storage. <br>
-> In our work, we delete the work directory once a pipeline successfully completes, <br>
-> effectively removing the utility of the resume feature. 
 
 
-### Exploring Nextflow's system logs 
+### Installing nf-core
 
-Let's return to our launchDir (/workspaces/mdhhs_nextflow_training) and run the following command:
+We're going to install nf-core with `pip`, as outlined in the nf-core [documentation](https://nf-co.re/docs/nf-core-tools/cli/installation#install-with-pip) 
 
 ```
-nextflow log
+pip3 install --break-system-packages nf-core==4.0.2
 ```
 
-![nextflow log](images/nextflow_log.png)
+`pip` is a python package management system used to install packages. We used `pip3` because it is the python3 alias. We have python 3.12.3 installed in this container. 
 
-We see various information such as:
+And we had to add the `--break-system-packages` flag to allow this to be installed while inside our container. This likely would not be needed if you were trying to install this on your system. 
 
-* TIMESTAMP
-    - The files in /workspaces/mdhhs_nextflow_training/results/pipeline_info/ correspond to the timestamp
-* COMMAND
-    - The actual command run to invoke the nextflow pipeline
-* DURATION
-    - Again, notice how much faster the resumed pipeline completed compare to the original run
-* RUN NAME 
-    - The run name is the human-readable form allowing you to simply refer to a pipeline run. Recall that the "runName" was displayed at the pipeline launch. 
-* SESSION ID
-    - The task cache is organized by this unique session ID to form the basis of the resume feature
+Try to invoke the nf-core command line interface (CLI):
 
-![Session ID](images/session_id.png)
+```
+nf-core
+```
 
+![nf-core](images/nf-core_download.png)
 
-In summary, all nextflow pipelines are able to be invoked from a single-line command providing nextflow core options and pipeline parameter inputs. Under the hood, nextflow has been designed as a powerful workflow management system that enables source tracking of all tasks and files created from an analysis. 
+Success! One more tool to install.
+
+But before that, you may be asking yourself, what is nf-core, short for nextflow-core? Briefly, [nf-core](https://nf-co.re/docs/get_started/nf-core) is a global community setting strict, best practices for building nextflow pipelines. Not only do they have a curation of community-built [pipelines](https://nf-co.re/pipelines/) freely available for the public to use, they also have a command line interface (CLI) that one can use to obtain nf-core pipelines (as we'll see in Part II) and build nextflow pipelines (as we'll make use of in the remaining tutorials part of this training series).
+
+### Installing SRATools
+
+[SRATools](https://github.com/ncbi/sra-tools) is used to download files from the SRA repository. 
+
+Use `wget` to retrieve the gzipped tarball file:
+
+```
+wget -q https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.3.0/sratoolkit.3.3.0-ubuntu64.tar.gz
+```
+
+Untar the file: 
+
+```
+tar -xvf sratoolkit.3.3.0-ubuntu64.tar.gz
+```
+
+Remove the original gzipped tarball file to clear storage space:
+
+```
+rm sratoolkit.3.3.0-ubuntu64.tar.gz
+```
+
+And finally, let's also move this into our `$HOME` directory and export the path the the SRA toolkit bin to our `$PATH` variable:
+
+```
+mv sratoolkit.3.3.0-ubuntu64/ $HOME/
+export PATH="$PATH:$HOME/sratoolkit.3.3.0-ubuntu64/bin"
+```
+
+Awesome! Now we have everything we need to start running nextflow pipelines. 
+
 
 ## Part II: Obtaining a pipeline from nf-core command line interface (CLI) and preparing a run
 
-### Remove prior data
-
-Let's replicate what we performed in Part I to start the nf-core-demo nextflow pipeline, but from scratch. Let's start fresh and delete the following files and directories:
-
-```
-rm -f samplesheet.csv
-rm -rf reads/ nf-core-demo_1.1.0/ results/ work/
-```
-
-![Remove](images/remove.png)
 
 ### Use nf-core CLI to download the nf-core-demo pipeline
+
+Let's confirm that we're in our launch directory (`launchDir`), which I'm defining as `/workspaces/mdhhs_nextflow_training`. And soon nextflow will define this for us, as well. 
 
 We will first start by downloading our pipeline of interest. And to do this, we will make use of the [nf-core CLI](https://nf-co.re/docs/nf-core-tools). Check out the link. nf-core commands will always start with nf-core, followed by 1 of 4 categories (modules, pipelines, subworkflows, test-datasets), followed by a command within that category. For example, on your terminal, type: 
 
@@ -322,11 +275,11 @@ nf-core pipelines download
 
 ![nf-core download](images/nfcore_download.png)
 
-You'll be prompted to enter a pipeline name. Type it all out or use the arrow keys and hit enter to select the demo pipeline.Use the arrow keys to navigate to and enter the pipeline version that you want to download:
+You'll be prompted to enter a pipeline name. Type it all out or use the arrow keys and hit enter to select the demo pipeline. Use the arrow keys to navigate to and enter the pipeline version that you want to download:
 
 ![pipeline version](images/pipeline_ver.png)
 
-Here, to stay consistent with the pipeline version from Part I, I will select the 1.1.0 release. Next, you'll be prompted if you want to download the containers:
+Let's go ahead and select the 1.1.0 release. Next, you'll be prompted if you want to download the containers:
 
 ![container download](images/container_download.png)
 
@@ -338,13 +291,21 @@ Select "none". If the nf-core pipeline download was successful, you should see t
 
 ![nf-core pipeline download](images/download_success.png)
 
-Explore the directory structure: 
+Explore the file/directory structure: 
 
 ![nf-core-demo organization](images/nfcore_demo_org.png)
 
-We will get into more details as we build our own pipeline but the presence of the main.nf file is required in order for the nextflow run command to function.
+We will get into more details as we build our own pipeline but briefly: 
 
-### Download FASTQ files and reorganize
+main.nf: required in order for the nextflow run command to function <br>
+nextflow.config: global pipeline configuration properties <br>
+assets: storage of reference files and databases <br>
+conf: pipeline-specific and computational configs <br>
+modules: bioinformatic tools installed here <br>
+subworkflows: collection of modules into a "mini workflow" <br>
+workflows: a script (per workflow) containing all modules/subworkflows in your pipeline <br>
+
+### Download FASTQ files and reorganize our directory structure
 
 Great! That was step 1. Step 2, we need to obtain our sample of interest. Download our tutorial dataset using the [SRA Toolkit](https://github.com/ncbi/sra-tools/wiki/HowTo:-fasterq-dump):
 
@@ -378,13 +339,13 @@ mv *.fastq.gz reads/
 
 ### Samplesheet creation
 
-Step 3, we need to make our samplesheet. As we saw before, this typically takes the form of CSV file:
+Step 3, we need to make our samplesheet. This is a `CSV` file that typically takes the form of:
 
 ![samplesheet example](images/samplesheet_ex.png)
 
-Typically three columns, where the first column represents the SRR accession number (or a unique sample identifier based on your FASTQ file naming scheme) and second and third columns provide the relative paths to the forward and reverse reads for a given sample, respectively. Rows are added for each sample in your analysis. 
+Typically three columns, where the first column represents the SRR accession number (or any unique sample identifier based on your FASTQ file naming scheme) and second and third columns provide the relative paths to the forward and reverse reads for a given sample, respectively. Rows are added for each sample in your analysis. 
 
-Now, say you had 100+ samples to analyze. This CSV file will be tedious to create. So we automate this with a script. In addition to automation, I prefer to be lazy and not reinvent the wheel. There is a script already available from the nf-core community that serves our purpose of automating samplesheet creation. Let's obtain this python script:
+Now, say you had 100+ samples to analyze. This CSV file will be tedious to create. So we automate this with a script. In addition to automation, I prefer to not reinvent the wheel. There is a script already available from the nf-core community that automates samplesheet creation. Let's obtain this python script from the [nf-core viralrecon pipeline](https://github.com/nf-core/viralrecon/tree/2.6.0):
 
 ```
 wget -L https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/fastq_dir_to_samplesheet.py
@@ -395,6 +356,12 @@ And then look at the help information for the python script:
 ```
 python3 fastq_dir_to_samplesheet.py -h
 ```
+
+> [!NOTE] <br>
+> Python3 was installed in this codespace we're currently using so we use the `python3` prompt instead of `python` to invoke the script
+
+<br>
+
 ![samplesheet help](images/samplesheet_help.png)
 
 We can see that the path to the FASTQ directory and name of our samplesheet are required inputs, along with other [optional] options. Go ahead and attempt to create the samplesheet as such: 
@@ -409,6 +376,8 @@ Ope, we ran into an error!
 
 It states that no FASTQ files were found and then states that we need to check our read extension parameters. On the file explorer panel, open the fastq_dir_to_samplesheet.py script. Take a moment to try to figure out what is wrong. 
 
+<br>
+
 <details>
 <summary>Reveal solution, here</summary>
 The python script, by default, expects read 1 and read 2 extensions to be "_R1_001.fastq.gz" and "_R2_001.fastq.gz", respectively. <br>
@@ -420,12 +389,14 @@ However, our current read 1 and read 2 extensions are "_1.fastq.gz" and "_2.fast
 
 </details>
 
+<br>
 
 We have 1 of 2 options here:
-1) Add additional parameters, --read1_extension "_1.fastq.gz" --read2_extension "_2.fastq.gz", to our python3 fastq_dir_to_samplesheet.py call
+1) Add additional parameters, `--read1_extension "_1.fastq.gz" --read2_extension "_2.fastq.gz"`, to our python3 fastq_dir_to_samplesheet.py call
 2) Change the extension of our FASTQ files to conform with the expected default
 
-I'm going to take option 2, because it better conforms to standard naming conventions within the sequencing community and, we don't typically obtain FASTQ files from SRR. We routinely obtain FASTQ files from BaseSpace, which normally outputs FASTQ files with "_R1_001.fastq.gz" (forward read) and "_R2_001.fastq.gz" (reverse read) extensions. 
+I'm going to take option 2, because it better conforms to standard naming conventions within the sequencing community and, we don't typically obtain FASTQ files from SRR. <br>
+We routinely obtain FASTQ files from BaseSpace, which normally outputs FASTQ files with "_R1_001.fastq.gz" (forward read) and "_R2_001.fastq.gz" (reverse read) extensions. 
 
 Change into the reads directory and change the file names:
 
@@ -437,7 +408,7 @@ mv SRR3747659_2.fastq.gz SRR3747659_R2_001.fastq.gz
 
 ![Extension change](images/extension_change.png)
 
-Return to the parent (mdhhs_nextflow_training) directory and try re-running the script
+Return to the `launchDir` directory (`/workspaces/mdhhs_nextflow_training`) and try re-running the script
 
 ```
 cd ..
@@ -448,11 +419,32 @@ python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
 
 Beautiful! Now it seems to have worked. If we select the samplesheet.csv file from the file explorer pane, we should now see that the relative paths to the forward and reverse reads are in the reads/ directory with the "_R1_001.fastq.gz" and "_R2_001.fastq.gz" extensions, respectively. 
 
-### Alter the nextflow base.config file to conform to CPU and memory availability on our VM
 
-Now, we need to perform this 4th step because of the computational limits of codespace.  
+### Run the nf-core-demo pipeline
 
-Can you recall what how many CPUs and memory is provided by our VM on codespace?
+Now, the 4th and final step of this nf-core demo pipeline is to simply run it:
+
+```
+nextflow run nf-core-demo_1.1.0/1_1_0/main.nf -profile docker --input samplesheet.csv --outdir results
+```
+
+Ope! You'll like run into an error that states this:
+
+![CPU issue](images/cpu_issue.png)
+
+<br> or this:
+
+![Memory issue](images/memory_issue.png)
+
+The main errors being either `Process requirement exceeds available memory` or `Process requirement exceeds available CPUs`
+
+### Alter the nextflow conf/base.config file to conform to CPU and memory availability on our VM
+
+We need to perform an additional step because of the computational limits of codespace.  
+
+Can you recall what how many CPUs and memory is provided by our virtual machine that we previously launched via GitHub codespace?
+
+<br>
 
 <details>
 <summary>Reveal solution, here</summary>
@@ -460,7 +452,9 @@ Can you recall what how many CPUs and memory is provided by our VM on codespace?
 8 GB of RAM
 </details>
 
-We need to place computational limits on our nextflow processes in a way that reflects the limits of our computing power. Select on the base.config file contained within nf-core_demo/1_1_0/conf/:
+<br>
+
+We need to place computational limits on our nextflow processes in a way that reflects the limits of our computing power. Select on the base.config file contained within `nf-core-demo_1.1.0/1_1_0/conf/`:
 
 ![base.config before](images/base_config_before.png)
 
@@ -473,183 +467,400 @@ And save the file:
 ```
 ctrl+s
 ```
+> [!NOTE] <br>
+> I apologize that we're getting a bit into the weeds here but this will all become clearer in the following tutorials <br>
+> For now, I just want to get the pipeline running so we can explore nextflow outputs and basic functionality before we start building our own nextflow pipeline in the remaining tutorials
 
-# Alternative: troubleshoot with copilot ask
+### Reattempt nextflow pipeline execution explore the `nextflow run` command
 
-If I tried running the pipeline before the previous edits, I would receive one of the following errors:
+Now again, from our launch directory (`launchDir`), `/workspaces/mdhhs_nextflow_training`, let's try to run the pipeline again: 
 
-![CPU issue](images/cpu_issue.png)
+```
+nextflow run nf-core-demo_1.1.0/1_1_0/main.nf -profile docker --input samplesheet.csv --outdir results
+```
+
+
+This command should have just successfully launched the nextflow pipeline. *At the bare minimum*, a nextflow pipeline requires:
+
+1) `nextflow run`
+    * the execution command
+2) the pipeline of interest that we want to run, providing a relative path to the `main.nf` file (`nf-core-demo_1.1.0/1_1_0/main.nf`)
+3) The profile core option, specifying a containerEngine (`-profile docker`)
+4) The input samplesheet.csv file, providing the paths to the FASTQ files (`--input samplesheet.csv`)
+    * as we just made from our downloaded FASTQ files obtained from SRA
+5) An out directory (outdir) where we want to write the results (`--outdir results`)
 
 <br>
 
-![Memory issue](images/memory_issue.png)
+> [!NOTE] <br>
+> The profile option has 1 dash while the input and outdir parameters have 2 dashes. <br>
+> Nextflow core options contain 1 dash. This affects the behavior of nextflow itself. <br>
+> Pipeline parameters, that affect a single workflow, is specified with 2 dashes. <br>
+> We'll explore another nextflow core option in a second. <br>
 
-This issue points to computational limits and is somewhat intuitive. Let's see if an LLM can help us troubleshoot this. 
+<br>
 
-Press F1 and search for the Ask and select "Chat: Open Chat (Ask)"
+When nextflow launched, you should have seen the following:
 
-![Copilot ask](images/copilot_ask.png)
+<br>
 
-A Copilot chat panel will open on the right side of your screen. Also notice if at the end of the error message that we should check the .nextflow.log file for details. We'll use that to our advantage to provide some context to the LLM chat tool. Select the .nextflow.log file from your file explorer panel and then you should notice that it appears as context within your LLM chat. In addition paste the following message and copy the error your received: 
+![Nextflow launch](images/nextflow_launch.png)
 
-![Copilot troubleshoot](images/copilot_troubleshoot.png)
+We see a number of things upon the launch:
 
-Prompt 1:  Can you help troubleshoot this error: 
-ERROR ~ Error executing process > 'NFCORE_DEMO:DEMO:SEQTK_TRIM (SRR3747659)'
+1) The nextflow version and a message providing the pipeline we launched,
+2) Input/output options
+    * We see an input samplesheet and a results out directory specified
+3) Generic options
+    * A time stamp to trace some of the output reports
+4) Core Nextflow options
+    * runName: randomly assigned. Here, I was given "sick_neumann"
+        - A unique session ID is provided with each nextflow run. Nextflow provides a human-readable name to simplify referencing it.
+    * containerEngine: nextflow supports various [engines](https://docs.seqera.io/nextflow/container#container-runtimes) but the most common are docker and apptainer.
+    * launchDir: path to where we launched the pipeline from (As mentioned before, I already started referring to this as the launch directory for purposes of consistency).
+    * workDir: path to where the work directory was created. We'll explore this concept in a second.
+    * projectDir: path to the nextflow pipeline of interest.
+    * userName: Your user name. This was assigned to you during this tutorial creation. 
+    * profile: redundant with containerEngine but this is also an input parameter specfied when we submit the command to run nextflow.
+    * configFiles: we will learn about [configuration files](https://docs.seqera.io/nextflow/config) in subsequent lessons, but briefly, these allow you to control how your pipeline runs without changing the underlying code. 
 
-Caused by:
-  Process requirement exceeds available memory -- req: 12 GB; avail: 7.8 GB
 
-Prompt 2: But what file is specifying memory?
+### Exploring the nf-core-demo results
 
-Prompt 3 (with base.config context): This file specifies memory and cpu but where are the process labels being used?
+Your pipeline should have completed by now. If so, you should see the following:
 
+![Pipeline complete](images/pipeline_complete.png)
 
-### Run the nf-core-demo pipeline
-
-Now, the 5th and final step of this nf-core demo pipeline is to simply run it:
+You should see the `Pipeline completed successfully message` along with additional time information. And if you list the contents the results directory: 
 
 ```
-nextflow run nf-core-demo_1.1.0/1_1_0/ -profile docker --input samplesheet.csv --outdir results
+ls results/
 ```
-Success!
 
-![nf-core demo success](images/nfcore-demo_success.png)
+It will be populated with our results:
 
-You just performed all the steps I previously prepared for you in Part I.
+1) fastqc - results from read QC assessment
+2) fq - the SEQTK trimmed FASTQ files
+3) multiqc - collection of results from individual tools into a report
+4) pipeline_info - a directory containing various reports and files including:
+    - [execution report](https://docs.seqera.io/nextflow/reports#execution-report): pipeline run information
+    - [execution timeline](https://docs.seqera.io/nextflow/reports#execution-timeline): timelines of tasks in pipeline
+    - [trace file](https://docs.seqera.io/nextflow/reports#trace-file): detailed task metrics
+    - [workflow diagram](https://docs.seqera.io/nextflow/reports#workflow-diagram): graphical visualization of a pipeline run
+    - software_mqc_versions.yml: provides pipleine, nextflow, and tool versions
+    - Notice how some of the pipeline info files have the trace report suffix specified at pipeline launch. 
+
+> [!Note]
+> File names in the `pipeline_info` directory will contain the `trace_report_suffix` output at pipeline launch.  
+
+<br>
+
+Go ahead and download the multiqc report:
+
+![MultiQC](images/multi_qc.png)
+
+> [!NOTE] <br>
+> When you right-click the file, you may need to toggle through the menus with the `Esc` key in order to see the "Download" option. 
+
+Open the HTML file explore this file for a bit. We see that we have a report of the FASTQC results from our two FASTQ files. As you will see, more complex pipelines have larger multiQC reports providing summary results from tools used during the analysis. 
+
+**The [MultiQC](https://seqera.io/multiqc/) report is an aggregate of bioinformatic analyses results**
+
+Now, on your pipeline completion message, you should also notice the letters and numbers just below the word, "executor". For example, as shown in the image, two images above, three are separate lines, one for each tool run in the pipeline, and each line appears to have unique characters assigned to those tasks. Let's explore what this is. 
+
+
+### Exploring Nextflow's resume feature
+
+Re-run the nf-core-demo pipeline with the addition of the `-resume` flag:
+
+```
+nextflow run nf-core-demo_1.1.0/1_1_0/main.nf -profile docker --input samplesheet.csv --outdir results -resume
+```
+
+> [!NOTE] <br>
+> `resume` is a nextflow core option <br>
+> Remember: 1 dash because it's a core option, not a parameter that we're changing in the pipeline
+
+<br>
+
+What do you notice?
+
+![Resume pipeline](images/resume_pipeline.png)
+
+Tasks for FASTQC and SEQTK_TRIM say `cached` (orange box). And what you would notice, if this pipeline was much more computationally intensive, is that the pipeline would complete much faster. Because effectively, what the "cached" means is that that task was saved in a manner that doesn't require a re-analysis upon a pipeline re-run. 
+
+This nextflow [resume feature](https://docs.seqera.io/nextflow/cache-and-resume) is permitted through the combination of the work directory and task cache. <br>
+    - The work directory, `launchDir/work/`, stores the actual files associated with the task. The directories are organized by the unique hash associated with the task <br>
+    - The task cache is stored in `launchDir/.nextflow/cache/`, organized by session ID. This directory stores metadata associated with your pipeline run <br>
+
+<br>
+
+> [!NOTE]
+> Recall when we first launched our pipeline that the `launchDir` was specified as `/workspaces/mdhhs_nextflow_training`.
+
+<br>
+
+For example, let's explore the SEQTK_TRIM task within the work directory. Within the work directory, the unique hash, created from a MD5 checksum, always starts with a two-character prefix followed by the remainder of the hash in a subdirectory. My hash, based on the image above, starts with 86/c94b15 (red box).
+
+<br>
+
+**Yours will be different.**
+
+<br>
+
+ Navigate to your SEQTK_TRIM task within the work directory and display the contents of the directory:
+
+<br>
+
+```
+#Starting from the launchDir
+cd work/hash_to/seqtk_trim_task
+
+#For my example in the image, above
+work/86/c94b15783c2bb555ef025d7a837a43/
+
+#list contents
+ls
+
+#list in long format
+ll
+```
+
+![SEQTK_TRIM workdir](images/seqtk_work.png)
+
+We notice that the full hash actually consists of 32 hexadecimal characters (the first two characters create the first directory within `work/` (in my example, 86) and the remaining 30 characters represent the sub-directory (in my example, c94b15783c2bb555ef025d7a837a43)). And using the long list command, we see that the input files came from our reads/ directory, which results in the trimmed FASTQ file outputs. 
+
+Challenge: compare the file sizes of the trimmed FASTQ files to the raw FASTQ files to really convince yourself that SRR3747659_SRR3747659_R1_001.fastq.gz and SRR3747659_SRR3747659_R2_001.fastq.gz are the trimmed reads. 
+
+We can see the actual command that was run by looking at the .command.sh file
+
+```
+cat .command.sh
+```
+
+![.command.sh file](images/command.sh.png)
+
+From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the very basic usage of the seqtk trimfq command is as follow:
+
+![SEQTK trimfq](images/seqtk_trimfq.png)
+
+Which is exactly what is occurring in our nextflow pipeline, except with a little more bells and whistles to the command itself. Try copying and pasting the following command into your terminal. 
+
+```
+printf "%s\n" SRR3747659_R1_001.fastq.gz SRR3747659_R2_001.fastq.gz | while read f; 
+do
+    echo $f;
+done
+```
+
+What is the output?
+
+<details>
+<summary>Reveal solution, here</summary>
+SRR3747659_R1_001.fastq.gz <br>
+SRR3747659_R2_001.fastq.gz
+
+In other words, this command will loop through each of these files individually and execute the command that follows.
+</details>
+
+<br>
+
+So in the nextflow pipeline script for SEQTK each raw FASTQ file gets trimmed, piped to gzip, and renamed. 
+
+Okay, so hopefully that provides you a little insight into the nextflow resume feature. The checkpoints provided by resume are particularly useful if your pipeline fails halfway through an analysis and you want to restart your pipeline without having to re-analyze everything from the beginning. 
+
+> [!CAUTION] <br>
+> Work directories can take up a lot of storage. <br>
+> In our work, we delete the work directory once a pipeline successfully completes. <br>
+
+### Exploring Nextflow's system logs 
+
+Let's return to our `launchDir` (`/workspaces/mdhhs_nextflow_training`) 
+
+
+![return to launhDir](images/return_to_launchdir.png)
+
+
+and run the following command:
+
+```
+nextflow log
+```
+
+![nextflow log](images/nextflow_log.png)
+
+We see various information such as:
+
+* TIMESTAMP
+    - The files in /workspaces/mdhhs_nextflow_training/results/pipeline_info/ correspond to the timestamp
+* COMMAND
+    - The actual command run to invoke the nextflow pipeline
+* DURATION
+    - Again, notice how much faster the resumed pipeline completed compare to the original run
+* RUN NAME 
+    - The run name is the human-readable form allowing you to simply refer to a pipeline run. Recall that the "runName" was displayed at the pipeline launch. 
+* SESSION ID
+    - The task cache is organized by this unique session ID to form the basis of the resume feature
+
+<br>
+
+This task cache is located in: 
+```
+cd .nextflow/cache
+ls
+```
+
+![Session ID](images/session_id.png)
+
+Again, this `cache` directory and the `work` directory form the basis of the `resume` feature functionality. Altering any of these directories breaks the `resume` feature and your pipeline would just start from the beginning on a subsequent run. 
+
+In summary, all nextflow pipelines are able to be invoked from a single-line command providing nextflow core options and pipeline parameter inputs. <br>
+
+Under the hood, nextflow has been designed as a powerful workflow management system that enables source tracking of all tasks and files created from an analysis. 
+ 
+
+## Part III: Creating your first nextflow pipeline with nf-core CLI   
+
+
+Let's make a new directory and call it "nextflow_training"
+
+```
+mkdir nextflow_training
+```
+
+And then change into directory we just created:
+
+```
+cd nextflow_training
+```
+
+![New directory](images/new_dir.png)
+
+Now, let's create our first pipeline!
+
+We will be building our pipeline using the [nf-core CLI](https://nf-co.re/docs/nf-core-tools). Check out the link. nf-core commands will always start with nf-core, followed by 1 of 4 categories (modules, pipelines, subworkflows, test-datasets), followed by a command within that category. For example, on your terminal, type: 
+
+```
+nf-core pipelines
+```
+
+![nfcore pipelines](images/nfcore_pipelines.png)
+
+
+You can see the list of available commands within the nf-core pipelines. In Part II, we used "download" to retrieve a previously built nf-core pipeline. Here, we will use the "create" command to create our first pipeline using the nf-core template. 
+
+
+```
+nf-core pipelines create -n "myfirstpipeline" -d "Tutorial for building nextflow pipelines with nf-core CLI" -a "John"
+```
+
+Where 
+nf-core pipelines create: invokes an nf-core CLI command <br>
+-n: name of your pipeline <br>
+-d: description of pipeline <br>
+-a: author <br>
+
+
+![Pipeline create](images/pipeline_create.png)
+
+Looks like it succeeded! Notice in the image below that my first attempt to create a pipeline failed:
+
+![Pipeline create fail](images/pipeline_create_fail.png)
+
+Notice what was different?
+
+<br>
+
+<details>
+<summary>Reveal solution, here</summary>
+I attempted underscores in the pipeline name. 
+</details>
+
+<br>
+
+The nf-core CLI did not allow that and my command errored out with the following error: 
+
+```
+"ERROR Invalid workflow name: must be lowercase" without punctuation.
+```
+
+This was easily fixed by removing the underscores. But, this was a nice introduction into the nf-core principles. You might be asking yourself, what exactly is [nf-core](https://nf-co.re/docs/get_started/nf-core)? In short, nf-core is a global community setting strict, best practices for building nextflow pipelines. You can create a nextflow pipeline, and then you can go beyond that to create an nf-core compliant nextflow pipeline. Specifications for creating an nf-core compliant nextflow pipeline can be viewed [here](https://nf-co.re/docs/specifications/overview). 
+
+> [!NOTE] <br>
+> We will not be creating an nf-core compliant nextflow pipeline for this nextflow training. <br>
+> But, the nf-core CLI is an invaluable resource, and will be used in this tutorial series as we build our nextflow pipeline. <br>
+> I also recommend it for all your future endeavors with building nextflow pipelines. 
+
+Navigate to your file explorer pane on the VS Code editor and take a look at the contents of your new pipeline:
+
+![Pipeline contents](images/pipeline_contents.png)
+
+There is a lot to unpack here but we will only focus on the main aspects of building a nextflow pipeline in this beginner tutorial. 
+
+We will encounter the following files:
+
+1) **main.nf**: The default and required script for "nextflow run" command functioning if no other script is specified. Here, pipeline initialization checks occur and you can also specify which pipeline you want to run (stored in the workflows/ directory).
+2) **nextflow.config**: the main configuration file containing default pipeline parameters and nextflow configuration options.
+
+And the following directories: 
+
+3) **assets/**: storage of reference files and databases
+4) **conf/**: additional configuration files for module-specific parameters, defining compute, reference files, and testing
+5) **workflows/**: location of individual files for pipelines. This is where we'll edit our workflow. Workflows contained here are executed from main.nf. Can contain multiple workflows herein, for example, if you had an Illumina pipeline and an ONT pipeline. 
+6) **modules/**: where individual bioinformatics tools (called processes) of a pipeline are stored. Organized into nf-core/ and local/ directories depending if the module is sourced from nf-core (as you'll see in Tutorial 2 and 4) or manually created (as we'll encounter in Tutorial 3), respectively. 
+7) **subworkflows/**: mini workflows chained together. Useful for a set of processes commonly used in a bioinformatics workflow (as we'll encounter in Tutorial 5).
+8) **bin/**: custom scripts that can be incorporated into modules. NOTE: this directory is currently not present from our initial nf-core pipeline creation but we will make use of it in tutorial 5.
+
+For more details on all files and directories, see [here](https://nf-co.re/docs/developing/pipelines/template-files).
+
+A lot of files and directories have already been downloaded and prepared for you with that one command. That is the utility of the nf-core CLI. Nextflow expects and requires this pipeline organization of files and directories described, above. <br>
+
+Now, we could have gone through the tedious process of creating all of these directories and files from scratch, but it's not worth it given the convenience of the nf-core CLI. And we will continue to make use of nf-core CLI to streamline our pipeline build. 
+
+> [!NOTE] <br>
+> It is important that you familiarize yourself with this general directory structure of nextflow. <br>
+> These are common files and directories you'll see throughout all types of bioinformatics pipelines built with nextflow. <br>
+> The details of these files and directories will become clearer throughout the tutorial. 
+
+Congratulations! You just made your first nextflow pipeline! I hope you're excited for the long journey ahead as we build out our pipeline!
+
+# Recap
+
+In tutorial 1, we:
+* learned installation steps to get nextflow running 
+* familiarized ourselves with the nf-core CLI to download an nf-core pipeline
+* prepared all components required for running the nf-core demo pipeline
+* explored nextflow pipeline organization, basic functionality, and utlity of the `resume` feature
+* created our first nextflow pipeline using the nf-core CLI
 
 *Generally*, these are the major steps to get a nextflow pipeline running:
 
-1) Obtain pipeline of interest
-2) Obtain FASTQ files
+1) Obtain (or build) a pipeline of interest
+2) Retrieve FASTQ files
 3) Prepare sample sheet
-4) Use nextflow run with required parameters to start the pipeline.
+4) Use `nextflow run` with required parameters to start the pipeline
 
-But, as you can see here, we needed an additional step due to an error. Other things that may be required prior to a nextflow run is obtaining an external database. Some databases are too large to store on GitHub. 
+Additional steps that may be needed include:
+* configuring computing resources (as we experienced here) or other configs specific to your computing machine
+* obtaining an external database (most databases are too large to store on GitHub).
+* obtaining reference files 
+* setting custom parameters and/or adding custom files
 
-## Part III: Obtaining a CDC pipeline from GitHub and performing a test run
-
-Only nf-core community-approved pipelines are stored on nf-core. But, you can also obtain nextflow pipelines from GitHub. And they do not have to abide by nf-core standards. For example, the CDC has created plenty of pipelines that are useful to the public health community. 
-
-Let's take [MIRA-NF](https://github.com/CDCgov/MIRA-NF) as an example. This pipeline can be used for influenza, SARS-CoV-2, or RSV analysis and accepts Illumina and ONT data. First, make a new directory call mira_test and change into that directory:
-
-```
-mkdir mira_test
-cd mira_test
-```
-
-![mkdir mira_test](images/mira_mkdir.png)
-
-Now, git clone the repository. If you navigate to the MIRA-NF GitHub repository link, above, you can select the following items in order to copy the MIRA-NF URL:
-
-![mira url](images/mira_url.png)
-
-On your codespace terminal, enter the following:
-
-```
-git clone -b v2.2.1 https://github.com/CDCgov/Mira-nf.git 
-```
-
-Where you can paste the URL you copied from the MIRA-NF GitHub repository after "git clone". I also added the branch flag (-b) to specify the release we want to clone. You can find releases on the right panel of the GitHub repository: 
-
-![mira release](images/pipeline_releases.png)
-
-You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your computer:
-
-![mira clone](images/mira_clone.png)
-
-```
-ls Mira-nf
-```
-
-You might notice that some of these files and directories in this pipeline look similar to the nf-core-demo pipeline. We'll learn more about these files and directories as we begin to build out our own pipeline in the following tutorials. 
-
-For now, enter the following command to run a built-in test of the pipeline:
-
-```
-nextflow run Mira-nf \
-    -profile docker \
-    --e 'Flu-Illumina' \
-    --input Mira-nf/tests/test_data/flu_wgs_illumina/samplesheet.csv \
-    --outdir results/ \
-    --runpath Mira-nf/tests/test_data/flu_wgs_illumina/
-```
-
-![mira error](images/mira_error.png)
-
-Awesome, another error! In contrast to the error in Part II, this one does not seem as intuitive. And this is the problem with nextflow, sometimes. Because this error is very specific to nextflow, I will take advantage of an LLM that was built specficially with nextflow in mind. 
-
-Sign up for [Seqera AI](https://ai.cloud.seqera.io/login). In the broader context, the [Seqera Platform](https://seqera.io/platform/) is a GUI-based software for launching, managaing, and monitoring nextflow pipelines. But, they also have this neat LLM that is available for all to use.
-
-Once you're logged into a Seqera AI session, you can copy the whole error message from your terminal and paste it into the seqera AI. I then added a message re-specifying the version of Nextflow I'm using. 
-
-![Seqera AI ask](images/seqera_ai_ask.png)
-
-Notice when you copy and pasted the error message that a context-dependent window popped-out. That is a useful feature of Seqera AI. 
-
-![Seqera AI response](images/seqera_ai_response.png)
-
-Alright, we received a message that this is due to the strict config parser (v2). This may be a good time to introduce nextflow's [strict syntax](https://docs.seqera.io/nextflow/strict-syntax). The gist of it is that in Nextflow version 26.04 and later, the strict sytax parser (v2) is turned on by default, and has updated rules as to what syntax is allowed when building nextflow pipleines.  
-
-The workaround solution, which is provided as a temporary solution by Seqera AI, is to specify that we want syntax parser v1:
-
-![Seqera AI solution](images/seqera_ai_solution.png)
-
-And we can achieve this by exporting this environmental variable (NXF_SYNTAX_PARSER):
-
-```
-export NXF_SYNTAX_PARSER=v1
-```
-
-![NXF_SYNTAX_PARSER](images/nxf_syntax_parser.png)
-
-Now, try re-running the pipeline as we did before:
-
-```
-nextflow run Mira-nf \
-    -profile docker \
-    --e 'Flu-Illumina' \
-    --input Mira-nf/tests/test_data/flu_wgs_illumina/samplesheet.csv \
-    --outdir results/ \
-    --runpath Mira-nf/tests/test_data/flu_wgs_illumina/
-```
-
-![mira rerun](images/mira_rerun.png)
+We will encounter some of these additional steps in later tutorials.
 
 
-Success!
-
-![mira success](images/mira_success.png)
-
-But notice in the temporary workaround solution provided by Seqera AI, it stated that if we "can't refactor yet", use the v1 syntax parser. The idea of refactoring is taking older pipelines built in Nextflow versions <26.04 and updating them to abide by the new syntax rules. Because as you can see from the [strict syntax](https://docs.seqera.io/nextflow/strict-syntax) documentation, eventually the "NXF_SYNTAX_PARSER=v1" option will be phased out in later versions of nextflow. 
-
-![Nextflow parser](images/nextflow_parser.png)
-
-Why I'm emphazing this is that this change is relatively new (Nextflow 26.04 was released in April of 2026). So when want to use a community pipeline, you always have to check which nextflow version you're using and does the pipeline you're using abide to strict syntax parser.
-
-If not, your options are:
-1) Downgrade your nextflow version where syntax parser is v1 by default
-2) export NXF_SYNTAX_PARSER=v1 while it's still available as an option in Nextflow v26.04.XX
-
-# Alternative challenge
-
-Have folks split up and try to troubleshoot this issue with chatgpt, copilot, or seqera AI.
+*Delete your codespace to save on free storage space quota*
 
 
-# Next steps 
+Select the dropdown menu on your GitHub webpage:
 
-If time permits, explore the Dockerfile and edit it to add the NXF_SYNTAX_pPARSER as an ENV variable
+![Dropdown menu](images/dropdown_menu.png)
 
 
+Select the `Codespaces` tab:
 
-Notes: 
+![Codespaces tab](images/codespace_tab.png)
 
-MAKE A BRANCH CHECKPOINT WITH THE fastq_dir_to_samplesheet.py SCRIPT
+Select the "more options" icon (`...`) and delete codespace:
 
-https://docs.seqera.io/nextflow/strict-syntax
-
-ADDRESS USER NAME IN DOCKERFILE
-
-Change original script to original nf-core-demo_1.1.0 organization
-    nf-core-dmeo_1.1.0/1.1.0/and then all the directories here
-    Update analysis_script.sh and remove main.nf
+![Delete codespace](images/delete_codespace.png)
