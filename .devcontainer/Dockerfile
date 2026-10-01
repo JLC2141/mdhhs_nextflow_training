@@ -53,9 +53,6 @@ RUN useradd -m -s /bin/bash vscode
 
 # set PATH and working directory
 ENV PATH="$PATH:/sratoolkit.${SRATOOLKIT_VER}-ubuntu64/bin"
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
 
 #WORKDIR /data
 WORKDIR /workspace
