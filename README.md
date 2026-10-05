@@ -992,6 +992,8 @@ If you're relaunching your codespace, lauch the `tutorial_2_challenge` branch to
 
 ![Challenge branch](images/challenge_branch.png)
 
+<br>
+
 Refer to the pipeline image at the beginning of this tutorial. We typically run FASTQC on the raw reads and then again on the trimmed reads to make sure that our reads are better quality post-trimming. 
 
 So let's do that! Edit the `workflows/myfirstpiple.nf` script and add the FASTQC module again just below our FASTP module:
@@ -1040,46 +1042,68 @@ And an additional FASTQC import line was added:
 include { FASTQC as FASTQC_TRIMMED} from '../modules/nf-core/fastqc/main'
 ```
 
-The `FASTQC as FASTQ_module_alias` is the key part to successfully create a module alias. We can then refer to `FASTQC_RAW` and `FASTQC_TRIMMED` in our workflow to distinguish between these two modules. Let's continue editing our `workflows/myfirstpiple.nf` file. 
+The `FASTQC as FASTQ_module_alias` is the key part to successfully create a module alias. We can then refer to `FASTQC_RAW` and `FASTQC_TRIMMED` in our workflow to distinguish between these two modules. Let's continue editing our `workflows/myfirstpiple.nf` file:
 
 
+![FASTQC module aliases](images/fastqc_modules.png)
+
+- Here, we:
+    - Changed the original `FASTQC` module call to `FASTQC_RAW` with input channel `ch_samplesheet`
+        - We also needed to change the FASTQ in `ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })` to `ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })`
+        - We will learn about this more in tutorial 6 when we learn MultiQC but for now, just make the change so that the pipeline runs. 
+    - Added the `FASTQC_TRIMMED` module with input channel `ch_trimmed_reads`
+    - Hashed out the line we had to view the `ch_samplesheet`
+        - And added a line below  `ch_trimmed_reads` = FASTP.out.trimmed_reads to view the `ch_trimmed_reads` channel
+    - Added descriptors to the FASTQ modules
 
 
-
-
-Also change the:
+Save the file 
 
 ```
-ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
+ctrl + s
 ```
+
+Okay, I think we're set! Let's re-run the pipeline
+
+```
+bash run_nextflow_analysis.sh
+```
+
+Okay cool! It looks like the pipeline succeeded: 
+
+![Module alias run](images/module_alias_run.png)
+
+Observe your results directory. Technically the pipeline ran and was "sucessful", but is everything as expected? Check out your results? What do you notice is wrong?
 
 <br>
-
-to:
-
-<br>
-
-```
-ch_multiqc_files = ch_multiqc_files.mix(FASTQC_raw.out.zip.map{ _meta, file -> file })
-```
-
-<br>
-
-We will learn about this more in tutorial 6 when we learn MultiQC but for now, just make the change so that the pipeline runs. 
-
-
-#FASTQC module aliases run but have same results output
-
-Technically the pipeline ran and was "sucessful", but is everything as expected? Check out your results? What do you notice is wrong?
 
 <details>
 <summary>Reveal solution, here</summary>
+
+<br>
+
 There is only one output for FASTQC, so the results from the raw reads must have been overriden by the trimmed reads after FASTQC was run again.
+
+![FASTQC one result](images/fastqc_alias_output.png)
+
 
 </details>
 
 
+Recall the `modules.config` file:
 
+![module config file](images/module_config.png)
+
+Specifically the section in the red box. This is a global publishDir directive. the `path` argument is essentially taking out `--outdir` parameter, which is `results` and organizing output subdirectories from each tool we use in the pipeline. The second part of the `path` arguments gathers the process name, `FASTQC`, converts it to lowercase, and makes it a subdirectory (`results/fastqc`).
+
+Because this is how we're specifying the output directory for `FASTQC`, the `FASTQC_RAW` module will run first and then output to `results/fastqc`. But then the `FASTQC_TRIMMED` module runs shortly after that and is also output to `results/fastqc`, which overwrites the results from the `FASTQC_RAW` module because the output files are the same. 
+
+We need to specify publishDir for `FASTQC_RAW` and `FASTQC_TRIMMED` in our `modules.config` file to override the process-wide configuration set at the beginning of this file. Make the following edits to the `modules.config` file:
+
+![module config edits](images/modules_config_edits.png)
+
+
+Add the following lines for `FASTQC_RAW`
 
 
 ```
@@ -1091,7 +1115,7 @@ There is only one output for FASTQC, so the results from the raw reads must have
     }
 ```
 
-and: 
+and the following lines for `FASTQC_TRIMMED`:
 
 ```
 withName: FASTQC_TRIMMED {
@@ -1102,10 +1126,37 @@ withName: FASTQC_TRIMMED {
     }
 ```
 
+We're specifying that we want these results published to two differently named directories within the results directory. 
 
 
+Save the file:
+
+```
+ctrl + s
+```
+
+And rerun the pipeline:
+
+```
+bash run_nextflow_analysis.sh
+```
+
+Awesome! Now it succedded: 
 
 
+![module alias success](images/module_alias_success.png)
+
+And we see two separate directories, `fastqc_raw` and `fastqc_trimmed`, for the `FASTQC` module results run on our raw and trimmed reads, respectively. 
+
+
+> [!NOTE] <br>
+> You will likely see the original `fastqc` directory within the results directory. <br>
+> This is because we're outputting results to the same `results/` directory with each nextflow pipeline run. <br>
+> If you were to delete the `results/` directory and rerun the pipeine, you then only see `fastqc_raw` and `fastqc_trimmed` <br>
+> Directories for FASTP within the `results/` directory. There would be no `fastqc` directory. <br>
+
+
+Nice job! You completed the challenge of adding a module alias. This is also very useful if you want to run the same tool twice but want different tool parameters. You would just add different `ext.args` to each module alias within the `modules.config file`.  
 
 
 
