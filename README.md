@@ -776,33 +776,29 @@ So in this case, our module was FASTP (captialized), "out" (as in output), and t
 FASTP.out.trimmed_reads
 ```
 
-Now, not required, but I also chose to rename the channel "ch_trimmed_reads", so that I know it's a (ch)annel.
+Here's another representation of it from the `modules/nf-core/fastp/main.nf` file:
+
+![FASTP emit ch](images/fastp_emit.png)
+
+So that is how we access the output channel from a module process and use it for downstream processes in our workflow script. Now, it's not required, but I also chose to rename the channel, `FASTP.out.trimmed_reads` to `ch_trimmed_reads`, so that I know it's a (ch)annel.
 
 
 ### FASTP module incorporation step 4
 
 **Step 4.** Adjust computing specifications because of the resource limitations of GitHub codespace
 
-And there are additional optional 
+Edit the `conf/base.config` file so that all process labels have `2` CPUs and `6.GB` of memory:
 
-4. Edit conf/base.config to specify computing resources
-5. Optional: Add external components associated with the module (e.g. reference file) to the assets/ directory
-6. Add external scripts to the bin/ directory
+![Compute edits](images/edit_compute.png)
 
-Need to also change base.config for process.low
+Again, this is a limitation to of GitHub codespace, in terms of computing power, so we need to make sure we stay within the computational bounds of our virtual machine. 
 
+### Optional edits
 
+At other points in this tutorial series, we will experience other edits that need to be made to our pipeline which may include: 
 
-
-
-
-
-Formatting is purely aesthetic.  
-
-
-
-
-
+5. Adding external components associated with a module (e.g. reference file) to the `assets/` directory
+6. Adding external scripts to the `bin/` directory
 
 
 ## Part III: Testing the pipeline
