@@ -286,14 +286,14 @@ There's a lot to take in here. But let's break down each component for simplicit
 
 1) The first line of this module defines the [process](https://docs.seqera.io/nextflow/process), and the process itself is uppercase as a result of [nf-core naming conventions](https://nf-co.re/docs/specifications/components/modules/naming-conventions#name-format-of-module-processes). We will stick to this naming convention because it will help distinguish pipeline components (modules vs channels vs operators) in our workflow.  
     - Think of the process as the actual code present in this file while the module is a reusable component for a nextflow workflow 
-2)  tag represents a custom identifier for each task execution of your process. The $meta.id is uniquely tied to the [meta map](https://nf-co.re/docs/developing/components/meta-map) created for our sample(s) contained in the samplesheet.csv. This takes the form of:
+2)  tag represents a custom identifier for each task execution of your process. The `$meta.id` is uniquely tied to the [meta map](https://nf-co.re/docs/developing/components/meta-map) created for our sample(s) contained in the samplesheet.csv. This takes the form of:
 
 ```
 [meta.id, [fastq_1, fastq_2]]
 ```
 
 
-- **The meta.id tag is our unique sample identifier tied to our FASTQ reads that can be used in our process to link sample IDs to process inputs/outputs.**
+- **The `meta.id` tag is our unique sample identifier tied to our FASTQ reads that can be used in our process to link sample IDs to process inputs/outputs.**
 
 - For example, say you had 3 samples and they are all processed through FASTP. The tag makes sure that each unique sample ID is associated with its read pair, both when used as input into the FASTP module and when output as trimmed reads. 
 
@@ -491,7 +491,7 @@ We will see that this input tuple comes from the samplesheet channel which takes
 [meta.id, [fastq_1, fastq_2]]
 ```
 
-So, the first `val` input in this tuple is the meta.id, followed by a paired `path` input to both the forward and reverse read files. In the script block, `${reads[0]}` is a nextflow variable that can capture the forward read (and `${reads[1]}` captures the reverse read).
+So, the first `val` input in this tuple is the `meta.id`, followed by a paired `path` input to both the forward and reverse read files. In the script block, `${reads[0]}` is a nextflow variable that can capture the forward read (and `${reads[1]}` captures the reverse read).
 
 
 
@@ -672,7 +672,7 @@ This is a global configuration setting for all modules part of your pipeline.
 - This `publishDir` directive is a way to specify output files from a pipeline. 
     - The first `path` line is organizing the output directory (defined by the `--outdir` parameter) with subdirectories created and named by each bioinformatics tool used in the pipeline, with the name converted to lowercase.
     - The second `mode` line defines how the results are taken from the `work/` directory and placed into your output directory. The most common setting for this is typically `copy`, meaning results will be copied from the `work` directory to your output directory. You can confirm this by finding this parameter with the global `nextflow.config` file (see image, below). 
-    - The `saveAs` line controls whether a file is published to the output directory and can handle renaming. Here, we are basically saying, if we detect a file called versions.yml, do not publish it, otherwise publish all other output files to the output directory.  
+    - The `saveAs` line controls whether a file is published to the output directory and can handle renaming. Here, this line is basically saying, "if we detect a file called versions.yml, do not publish it, otherwise publish all other output files to the output directory".  
 
 
 ![Publish dir mode](images/publish_dir.png)
@@ -720,7 +720,7 @@ See that purple arrow? Add this line just above the FASTQC module:
 ch_samplesheet.view()
 ```
 
-Here, we are using the [view](https://docs.seqera.io/nextflow/reference/operator#view) operator to print the output of the channel `ch_samplesheet`. We basically want to look at what is represented by our `meta.id` tag.
+Here, we are using the [view](https://docs.seqera.io/nextflow/reference/operator#view) operator to print the output of the channel `ch_samplesheet`. We basically want to look at how our input `samplesheet.csv` is being converted into a channel. 
 
 And do you see that orange arrow in the image above? Let's place our FASTP module within this space, like so: 
 
@@ -760,17 +760,18 @@ Let's focus on the inputs, first. We need the same number of inputs as declared 
 > `//` in nextflow is equivalent to the `#` symbol in bash. <br>
 > It is used for descriptive commenting within your script. <br>
 > Not required but is good practice so others can understand your code. <br>
+> Here, I used it to make a label describing the use of the FASTP module for read trimming. <br>
 
 
 All we really care about is the trimmed reads so I input false for all of these (plus, they take up extra storage)
 
-Next was specifying the channel containing our trimmed reads. Nextlow channel outputs from modules/subworkflows take the form of:
+Next, we need to specify the new channel containing our trimmed reads. Nextlow channel outputs from modules/subworkflows take the form of:
 
 ```
 MODULENAME.out.emit_name
 ```
 
-So in this case, our module was FASTP (captialized), "out" (as in output), and then whatever we name we gave after "emit:" within the output for the trimmed reads. Remember, we changed "reads" to "trimmed_reads". So putting it all together, it's:
+So in this case, our module was FASTP (captialized), "out" (as in output), and then whatever name we gave after "emit:" within the output for the trimmed reads. Remember, we changed `emit: reads` to `emit: trimmed_reads`. So putting it all together, it's:
 
 ```
 FASTP.out.trimmed_reads
@@ -787,11 +788,13 @@ So that is how we access the output channel from a module process and use it for
 
 **Step 4.** Adjust computing specifications because of the resource limitations of GitHub codespace
 
-Edit the `conf/base.config` file so that all process labels have `2` CPUs and `6.GB` of memory:
+Edit the `conf/base.config` file so that the `process_low` label has `2` CPUs and `6.GB` of memory:
 
 ![Compute edits](images/edit_compute.png)
 
 Again, this is a limitation to of GitHub codespace, in terms of computing power, so we need to make sure we stay within the computational bounds of our virtual machine. 
+
+This `process_low` directive it what we edited in the `modules/nf-core/fastp/main.nf` file from `process_medium` to `process_low` and refers to these newly set computational limits.
 
 ### Optional edits
 
@@ -868,7 +871,7 @@ bash run_nextflow_analysis.sh
  
 ```
 
-Wooo, the ourpipeline launched: 
+Wooo, our pipeline launched: 
 
 ![Pipeline launch](images/pipeline_launch.png)
 
@@ -924,7 +927,7 @@ This is the channel created from our `samplesheet.csv` file. We can see that it 
 
 Hopefully the `samplesheet.csv` > `ch_samplesheet` > `meta.id` > `tuple val(meta), path(reads)` connection is starting to make sense.
 
-**This `meta.id` tag will hold for the remainder of the pipeline build and will be incorporated into every module we use. Again, this ties a unique sample ID to it's respective FASTQ read pair files**
+**This `meta.id` tag will be incorporated into every module we use. Again, this ties a unique sample ID to it's respective FASTQ read pair files**
 
 ### Troubleshoot error
 
@@ -1074,6 +1077,30 @@ Technically the pipeline ran and was "sucessful", but is everything as expected?
 There is only one output for FASTQC, so the results from the raw reads must have been overriden by the trimmed reads after FASTQC was run again.
 
 </details>
+
+
+
+
+
+```
+ withName: FASTQC_RAW {
+        ext.args = '--quiet'
+        publishDir = [
+            path: { "$params.outdir/fastqc_raw" }
+        ]
+    }
+```
+
+and: 
+
+```
+withName: FASTQC_TRIMMED {
+        ext.args = '--quiet'
+        publishDir = [
+            path: { "$params.outdir/fastqc_trimmed" }
+        ]
+    }
+```
 
 
 
