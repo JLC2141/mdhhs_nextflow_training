@@ -3,8 +3,9 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_RAW} from '../modules/nf-core/fastqc/main'
 include { FASTP                  } from '../modules/nf-core/fastp/main'
+include { FASTQC as FASTQC_TRIMMED} from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -31,11 +32,11 @@ workflow MYFIRSTPIPELINE {
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
     //
-    // MODULE: Run FastQC
+    // MODULE: Run FastQC on raw reads
     //
-    ch_samplesheet.view()
-    FASTQC(ch_samplesheet)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
+    //ch_samplesheet.view()
+    FASTQC_RAW(ch_samplesheet)
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })
 
     //
     // MODULE: Run FASTP read trimming
@@ -47,6 +48,12 @@ workflow MYFIRSTPIPELINE {
         false
     )
     ch_trimmed_reads = FASTP.out.trimmed_reads
+    ch_trimmed_reads.view()
+
+    //
+    // MODULE: Run FASTQC on trimmed reads
+    //
+    FASTQC_TRIMMED(ch_trimmed_reads)
 
     //
     // Collate and save software versions
