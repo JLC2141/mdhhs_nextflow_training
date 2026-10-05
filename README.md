@@ -1,654 +1,1090 @@
 # Table of contents
 - [Overview](#-overview)
-- [Tutorial 1](#-tutorial-1)
-- [Part I](#part-i-exploring-nextflow-pipeline-execution-and-exploring-results)
-- [Part II](#part-ii-obtaining-a-pipeline-from-nf-core-command-line-interface-cli-and-preparing-a-run)
-- [Part III](#part-iii-obtaining-a-cdc-pipeline-from-github-and-performing-a-test-run)
-
+- [Tutorial 2](#-tutorial-2)
+- [Part I](#part-i-creating-your-first-nextflow-pipeline-with-nf-core-cli)
+- [Part II](#part-ii-adding-a-new-module-and-incorporating-it-into-the-pipeline)
+- [Part III](#part-iii-testing-the-pipeline)
+- [Recap](#recap)
+- [Challenge](#challenge-adding-a-module-alias)
 
 # 📖 Overview
 
-# 📖 Tutorial 1
+Here is a overview of the pipeline we are going to build:
 
-# Part I: Exploring nextflow pipeline execution and exploring results   
+![Pipeline overview](images/pipeline_overview.png)
 
-### Launching the nextflow tutorial on GitHub Codespaces
+This simple pipeline starts with RAW FASTQ reads obtained from the SRA repository. Specifically, a [measles WGS sequencing sample](https://www.ncbi.nlm.nih.gov/sra?LinkName=biosample_sra&from_uid=61933769) obtained from a broader viral (non-SARS-CoV-2) surveillance effort at Wyoming PHL published under SRA project [PRJNA858824](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA858824)
+
+The pipeline then performs the following steps
+
+1) Read QC on raw FASTQ reads with [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+    - What is the quality of our reads off the sequencer?
+2) Read trimming with [FASTP](https://github.com/opengene/fastp)
+    - Removal of low quality reads and trimmming of low quality bases
+3) **Challenge task**: Read QC on trimmed FASTQ reads with [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+    - Does the quality of our reads improve post-trimming?
+4) Read scrubbing on raw FASTQ reads with [read-it-and-keep](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep)
+    - If you anticipated submitting these sequences to a database and wanted to ensure removal of human reads
+5) Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2)
+    - How well do our trimmed reads map to a reference genome?
+6) Read mapping stats with [SAMtools](https://github.com/samtools/samtools)
+    - Also converts SAM to BAM if you were to proceed with variant calling
+7) Results report generation with [MultiQC](https://github.com/multiqc/multiqc)
+    - Aggregates results from our pipeline into a final report
+
+# 📖 Tutorial 2
+
+The objectives of this tutorial are:
+1) Use the nf-core command line interface (CLI) to create a new nextflow pipeline with a starter template
+2) Learn the standard directory and file structure of a nextflow pipeline
+3) Use the nf-core CLI to add a new module
+4) Understand required files to edit and nextflow syntax needed to incorporate the module into a pipeline workflow
+5) Optional challenge: Use of a `module alias` to use a module twice within a pipeline
+
+<br> 
+
+# Getting started
 
 **Make sure that you are signed-in to your GitHub account.**
 
 Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training).
 
-![Launching codespaces](images/launch_codespace.png)
+Select the `branch` icon and select the `tutorial_2` branch.
 
-Select the green <> Code icon, the Codespaces tab, the ellipsis, and then select "New with options...". 
+![Tutorial 2 branch](images/tutorial_2_branch.png)
 
+The webpage will reload. Confirm that the `tutorial_2` branch is loaded. Select the green <> Code icon, the Codespaces tab, and then select `Create codespace on tutorial_2`
 
-Make sure that the branch selection is "main". Select the options for "Machine type". Select the 2-core option but before you do, take note of the virtual machine (VM) that we're about to create. 
-
-![Codespace options](images/codespace_options.png)
-
-How many CPUs? How much memory will our VM contain?
-
-<details>
-<summary>Reveal solution, here</summary>
-2 CPU cores
-8 GB of RAM
-
-We will need to make use of this information later in this tutorial so keep that this information in mind!
-</details>
-
-Finally, create the codespace
-
-![Codespace create](images/codespace_create.png)
-
-A new codespaces session will launch. It will take a few minutes for the set up to complete. A prompt may appear as such:
-
-![Trust foler](images/trust_folder.png)
-
-Select "Trust folder & continue". Once codespaces creation is completed, you should see the file explorer panel on the left and the terminal in the lower panel:
-
-![Successful launch](images/codespace.png)
-
-If you do not see the terminal, press F1. You'll be prompted on the search bar. Type the following, "View:toggle terminal", and select that option. 
-
-![Toggle terminal](images/toggle_terminal.png)
+![Codespace launch](images/codespace_launch.png)
 
 > [!NOTE] <br>
-> The greater-than symbol is needed in order to switch from file search mode to command mode.
+> This will launch a codespace with 2 CPUs, 8 GB RAM, and 32 GB storage capacity <br>
+> This is the default minimal virtual machine option for a GitHub codespace <br>
 
-### Sample download and running the nf-core-demo pipeline
+<br>
 
-Okay, let's run our first nextflow pipeline! But first, we need to retrieve our FASTQ files. Run the following command on your terminal:
-
-```
-bash sample_download.sh
-```
+# Part I: Creating your first nextflow pipeline with nf-core CLI   
 
 > [!NOTE] <br>
-> The previous instruction was contained within a code block. I encourage you to type the commands yourself throughout the tutorial but, <br>
-> if you fall behind or prefer convenience, then use these code blocks to copy and paste the commands into your codespaces terminal.
+> This is a checkpoint from tutorial 1. Nextflow, nf-core, and SRATools are already installed for you <br>
+> The samplesheet creation script, fastq_dir_to_samplesheet.py, is also present <br>
+> As well as two bash scripts, sample_download.sh and run_nextflow_analysis.sh <br>
+> For streamlining FASTQ download and pipeline invocation, respectively.  
 
-For example, navigate back to the GitHub repo, [here](https://github.com/JLC2141/mdhhs_nextflow_training). Right-click on the README.md file and open it in a new tab. 
 
-Locate the previous code block in the README.md file. 
+### Create your first pipeline
 
-![Code block](images/copy_code.png)
-
-You can click on the icon at the right of the code block to copy, and then paste the code in your terminal. 
-
-Alright, it looks like our FASTQ files have been downloaded. We can confirm this by listing the contents within the reads/ directory:
-
-```
-ls reads
-```
-
-![Sample download](images/sample_download.png)
-
-
-Awesome! Now, all we need to do to start the nextflow demo pipeline is the following:
-
-```
-bash analysis.sh
-```
-
-Nextflow should launch:
-
-![Nextflow launch](images/nextflow_launch.png)
-
-We see a number of things upon the launch:
-
-1) The nextflow version and a message providing the pipeline we launched,
-2) Input/output options
-    * We see an input samplesheet and a results out directory specified
-3) Generic options
-    * A time stamp to trace some of the output reports
-4) Core Nextflow options
-    * runName: randomly assigned. Here, I was given "deadly_leavitt"
-        - A unique session ID is provided with each nextflow run. Nextflow provides a human-readable name to simplify referencing it
-    * containerEngine: nextflow supports various [engines](https://docs.seqera.io/nextflow/container#container-runtimes) but the most common are docker and apptainer
-    * launchDir: path to where we launched the pipeline from
-    * workDir: path to where the work directory was created. We'll touch on this concept in a second
-    * projectDir: path to the nextflow pipeline of interest
-    * userName: Your user name. This was assigned to you during this tutorial creation. We'll address this later. 
-    * profile: redundant with containerEngine but this is also an input parameter specfied when we submit the command to run nextflow
-    * configFiles: we will learn about [configuration files](https://docs.seqera.io/nextflow/config) in subsequent lessons, but briefly, these allow you to control how your pipeline runs without changing the underlying code. 
-
-### Exploring the nextflow run command
-
-Take a look at the bash script we just ran to start this nextflow pipeline: 
-
-![Bash nextflow](images/bash_nextflow.png)
-
-This was the command we used to the launch the nextflow pipeline. At the bare minimum, a nextflow pipeline requires:
-
-1) nextflow run
-    * the execution command
-2) the pipeline of interest that we want to run (nf-core-demo/_1.1.0)
-3) The profile core option, specifying a containerEngine (-profile docker)
-4) The input samplesheet.csv file, providing the paths to the FASTQ files (--input samplesheet.csv)
-    * select this samplesheet in the file explorer panel and see for yourself
-5) An out directory (outdir) where we want to write the results (--outdir results)
-
-> [!NOTE] <br>
-> The profile option has 1 dash while the input and outdir parameters have 2 dashes. 
-> Nextflow core options contain 1 dash. This affects the behavior of nextflow itself. 
-> Pipeline parameters, that affect a single workflow, is specified with 2 dashes. 
-> We'll explore another nextflow core option in a second. 
-
-You may be asking yourself why this demo pipeline is named as nf-core, short for nextflow-core. Briefly, [nf-core](https://nf-co.re/docs/get_started/nf-core) is a global community setting strict, best practices for building nextflow pipelines. Not only do they have a curation of community-built [pipelines](https://nf-co.re/pipelines/) freely available for the public to use, they also have command line interface (CLI) that one can use to obtain nf-core pipelines (as we'll see in Part II) and build nextflow pipelines (as we'll make use of for the remaining tutorials part of this training series).
-
-Your pipeline should have completed by now. If so, you should see the following:
-
-![Pipeline complete](images/pipeline_complete.png)
-
-
-### Exploring the nf-core-demo results
-
-You should see the "Pipeline completed successfully message" along with additional time information. And if you list the contents the results directory, it will be populated with our results:
-
-1) fastqc - results from read QC assessment
-2) fq - the SEQTK trimmed FASTQ files
-3) multiqc - collation of results from individual tools into a report
-4) pipeline_info - a directory containing various reports and files including:
-    - [execution report](https://docs.seqera.io/nextflow/reports#execution-report): pipeline run information
-    - [execution timeline](https://docs.seqera.io/nextflow/reports#execution-timeline): timelines of tasks in pipeline
-    - [trace file](https://docs.seqera.io/nextflow/reports#trace-file): detailed task metrics
-    - [workflow diagram](https://docs.seqera.io/nextflow/reports#workflow-diagram): graphical visualization of a pipeline run
-    - software_mqc_versions.yml: provides pipleine, nextflow, and tool versions
-    - Notice how some of the pipeline info files have the trace report suffix specified at pipeline launch. 
-
-Go ahead and download the multiqc report:
-
-![MultiQC](images/multi_qc.png)
-
-> [!NOTE] <br>
-> When you right-click the file, you may need to toggle through the menus with the "Esc" key in order to see the "Download" option. 
-
-Explore this file. We see that we have a report of the FASTQC results from our two FASTQ files. As you will see, more complex pipelines have larger multiQC reports providing summary results from tools used during the analysis. 
-
-Now, on your pipeline completion message, you should also notice the letters and numbers just below the word, "executor". For example, in the image shown above, three separate lines, for each tool run in the pipeline, appears to have unique characters assigned to those tasks. Let's explore what this is. 
-
-### Exploring Nextflow's resume feature
-
-Re-open the analysis.sh file and edit the file to look as such:
-
-![Adding resume](images/adding_resume.png)
-
-Here we:
-1. added a "\" line separator to the --outdir line
-2. Added the -resume nextflow core option
-    * Remember: 1 dash because it's a core option, not a parameter that we're changing in the pipeline
-
-
-Save the file: 
-
-```
-ctrl+s
-```
-
-And restart the pipeline. What do you notice?
-
-![Resume pipeline](images/resume_pipeline.png)
-
-Tasks for FASTQC and SEQTK_TRIM say cached. And what you would notice, if this pipeline was much more computationally intensive, is that the pipeline would complete much faster. Because effectively, what the "cached" means is that that task was saved in a manner that doesn't require a re-analysis upon a pipeline re-run. 
-
-This nextflow [resume feature](https://docs.seqera.io/nextflow/cache-and-resume) is permitted through the combination of the task cache and work directory.
-    - The task cache is stored in launchDir/.nextflow/cache/, organized by session ID. This directory stores metadata associated with your pipeline run
-    - The work directory, launchDir/work/, stores the actual files associated with the task. The directories are organized by the unique hash associated with the task
-
-For example, let's explore the SEQTK_TRIM task within the work directory. Within the work directory, the unique hash, created from a MD5 checksum, always starts with a two-character prefix followed by the remainder of the hash in a subdirectory. My hash, based on the image above, starts with 2e/74ea6b. Yours will be different. Navigate to your SEQTK_TRIM task within the work directory and display the contents of the directory:
-
-```
-cd work/yourHashTo/seqtk_trim
-#list contents
-ls
-#list in long format
-ll
-```
-
-![SEQTK_TRIM workdir](images/seqtk_work.png)
-
-We notice that the full hash actually consists of 32 hexadecimal characters. And using the long list command, we see that the input files came from our reads/ directory, which results in the trimmed FASTQ file outputs. 
-
-Challenge: compare the file sizes of the trimmed FASTQ files to the raw FASTQ files to really convince yourself that SRR3747659_SRR3747659_R1_001.fastq.gz and SRR3747659_SRR3747659_R2_001.fastq.gz are the trimmed reads. 
-
-We can see the actual command that was run by looking at the .command.sh file
-
-```
-cat .command.sh
-```
-
-![.command.sh file](images/command.sh.png)
-
-From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the very basic usage of the seqtk trimfq command is as follow:
-
-![SEQTK trimfq](images/seqtk_trimfq.png)
-
-Which is exactly what is occurring in our nextflow pipeline, except with a little more bells and whistles to the command itself. Try copying and pasting the following command into your terminal. 
-
-```
-printf "%s\n" SRR3747659_R1_001.fastq.gz SRR3747659_R2_001.fastq.gz | while read f; 
-do
-    echo $f;
-done
-```
-
-What is the output?
-
-<details>
-<summary>Reveal solution, here</summary>
-SRR3747659_R1_001.fastq.gz
-SRR3747659_R2_001.fastq.gz
-
-In other words, this command will loop through each of these files individually and execute the command that follows.
-</details>
-
-So each raw FASTQ file gets trimmed, piped to gzip, and renamed. 
-
-Okay, so hopefully that provides you a little insight into the nextflow resume feature. The checkpoints provided by resume are particularly useful if your pipeline fails halfway through an analysis and you want to restart your pipeline without having to re-analyze everything from the beginning. 
-
-> [!TIP] <br>
-> Work directories can take up a lot of storage. <br>
-> In our work, we delete the work directory once a pipeline successfully completes, <br>
-> effectively removing the utility of the resume feature. 
-
-
-### Exploring Nextflow's system logs 
-
-Let's return to our launchDir (/workspaces/mdhhs_nextflow_training) and run the following command:
-
-```
-nextflow log
-```
-
-![nextflow log](images/nextflow_log.png)
-
-We see various information such as:
-
-* TIMESTAMP
-    - The files in /workspaces/mdhhs_nextflow_training/results/pipeline_info/ correspond to the timestamp
-* COMMAND
-    - The actual command run to invoke the nextflow pipeline
-* DURATION
-    - Again, notice how much faster the resumed pipeline completed compare to the original run
-* RUN NAME 
-    - The run name is the human-readable form allowing you to simply refer to a pipeline run. Recall that the "runName" was displayed at the pipeline launch. 
-* SESSION ID
-    - The task cache is organized by this unique session ID to form the basis of the resume feature
-
-![Session ID](images/session_id.png)
-
-
-In summary, all nextflow pipelines are able to be invoked from a single-line command providing nextflow core options and pipeline parameter inputs. Under the hood, nextflow has been designed as a powerful workflow management system that enables source tracking of all tasks and files created from an analysis. 
-
-## Part II: Obtaining a pipeline from nf-core command line interface (CLI) and preparing a run
-
-### Remove prior data
-
-Let's replicate what we performed in Part I to start the nf-core-demo nextflow pipeline, but from scratch. Let's start fresh and delete the following files and directories:
-
-```
-rm -f samplesheet.csv
-rm -rf reads/ nf-core-demo_1.1.0/ results/ work/
-```
-
-![Remove](images/remove.png)
-
-### Use nf-core CLI to download the nf-core-demo pipeline
-
-We will first start by downloading our pipeline of interest. And to do this, we will make use of the [nf-core CLI](https://nf-co.re/docs/nf-core-tools). Check out the link. nf-core commands will always start with nf-core, followed by 1 of 4 categories (modules, pipelines, subworkflows, test-datasets), followed by a command within that category. For example, on your terminal, type: 
+We will be building our pipeline using the [nf-core CLI](https://nf-co.re/docs/nf-core-tools). Check out the link. nf-core commands will always start with nf-core, followed by 1 of 4 categories (modules, pipelines, subworkflows, test-datasets), followed by a command within that category. For example, on your terminal, type: 
 
 ```
 nf-core pipelines
 ```
 
-![nf-core pipelines](images/nfcore_pipelines.png)
+![nfcore pipelines](images/nfcore_pipelines.png)
 
-And you can see that we have 4 additional subcommands that we can use. Let's go a step further with a subcommand and type:
 
-```
-nf-core pipelines list
-```
-Scroll through the list until you find the nf-core demo pipeline:
+You can see the list of available commands within the nf-core pipelines. Recall in tutorial 1, we used `nf-core pipelines download` to retrieve a previously built nf-core pipeline. Here, we will use the `create` command to create our first pipeline using the nf-core template:
 
-![nf-core demo](images/nfcore_demo.png)
-
-There it is! Okay, let's go another step further and download this pipeline to our computer:
 
 ```
-nf-core pipelines download
+nf-core pipelines create -n "myfirstpipeline" -d "Tutorial for building nextflow pipelines with nf-core CLI" -a "John"
 ```
 
-![nf-core download](images/nfcore_download.png)
+Where: <br>
+`nf-core pipelines create`: invokes an nf-core CLI command <br>
+`-n`: name of your pipeline <br>
+`-d`: description of pipeline <br>
+`-a`: pipeline author <br>
 
-You'll be prompted to enter a pipeline name. Type it all out or use the arrow keys and hit enter to select the demo pipeline.Use the arrow keys to navigate to and enter the pipeline version that you want to download:
 
-![pipeline version](images/pipeline_ver.png)
+![Pipeline create](images/pipeline_create.png)
 
-Here, to stay consistent with the pipeline version from Part I, I will select the 1.1.0 release. Next, you'll be prompted if you want to download the containers:
+Looks like it succeeded! Notice in the image below that my first attempt to create a pipeline failed:
 
-![container download](images/container_download.png)
+![Pipeline create fail](images/pipeline_create_fail.png)
 
-Select "none". Finally, you'll be prompted for compression type:
+Notice what was different?
 
-![compression](images/compression.png)
+<br>
 
-Select "none". If the nf-core pipeline download was successful, you should see the following information along with a new directory containing your nf-core-demo_1.1.0 pipeline:
+<details>
+<summary>Reveal solution, here</summary>
+I attempted underscores in the pipeline name. 
+</details>
 
-![nf-core pipeline download](images/download_success.png)
+<br>
 
-Explore the directory structure: 
+The nf-core CLI did not allow that and my command errored out with the following error: 
 
-![nf-core-demo organization](images/nfcore_demo_org.png)
+```
+"ERROR Invalid workflow name: must be lowercase" without punctuation.
+```
 
-We will get into more details as we build our own pipeline but the presence of the main.nf file is required in order for the nextflow run command to function.
+This was easily fixed by removing the underscores. But, this was a nice introduction into the nf-core principles. You might be asking yourself, what exactly is [nf-core](https://nf-co.re/docs/get_started/nf-core)? In short, nf-core is a global community setting strict (like pipeline name restrictions), best practices for building nextflow pipelines. You can create a nextflow pipeline, and then you can go beyond that to create an nf-core compliant nextflow pipeline. Specifications for creating an nf-core compliant nextflow pipeline can be view [here](https://nf-co.re/docs/specifications/overview).
 
-### Download FASTQ files and reorganize
-
-Great! That was step 1. Step 2, we need to obtain our sample of interest. Download our tutorial dataset using the [SRA Toolkit](https://github.com/ncbi/sra-tools/wiki/HowTo:-fasterq-dump):
+<br>
 
 > [!NOTE] <br>
-> Like nf-core, SRA Toolkit also has built in CLI commands.
-> And that's what we're using here to retrieve FASTQ files.
+> When you use the nf-core CLI, it will tell you when we are not abiding to nf-core principles (as seen in the error, above) <br> 
+> But, we will not be creating an nf-core compliant nextflow pipeline for this nextflow training. <br>
+> However, the nf-core CLI is an invaluable resource, and will be used in this tutorial when building our nextflow pipeline. <br>
+> I also recommend it for all your future endeavors when building nextflow pipelines. <br>
 
-```
-fasterq-dump SRR3747659
-```
+<br>
+
+### Exploring pipeline contents
+
+Navigate to your file explorer pane on the VS Code editor and take a look at the contents of your new pipeline:
+
+![Pipeline contents](images/pipeline_contents.png)
+
+There is a lot to unpack here but we will only focus on the main aspects of building a nextflow pipeline in this beginner tutorial. 
+
+We will encounter the following files:
+
+1) **main.nf**: The default and required script for `nextflow run` command functioning if no other script is specified. Here:
+    - pipeline initialization checks occur 
+    - our `samplesheet.csv` is converted into channel (`ch_samplesheet`)
+    - and you can also specify which pipeline you want to run (pipelines stored in the `workflows/` directory)
+    - for example, you could create separate pipeline for Illumina (`workflows/mypipeline_illumina.nf`) and ONT (`workflows/mypipeline_ont.nf`) reads 
+2) **nextflow.config**: the main configuration file containing default pipeline parameters and nextflow configuration options
+
+And the following directories: 
+
+3) **assets/**: storage of reference files and databases
+4) **conf/**: additional configuration files for module-specific parameters, defining compute, and testing. The most important being:
+    - `base.config`: defining computing resources
+    - `modules.config`: defining bioinformatic tool parameters and output format
+5) **workflows/**: location of individual files for pipelines. This is where we'll build our workflow through the combination of `modules`, `channels`, and `operators`. Workflows contained here are executed from the main.nf file (`nf-core-myfirstpipeline/main.nf`)
+    - Can contain multiple pipelines (`name_of_pipeline.nf`) within the `workflows` directory
+6) **modules/**: where individual bioinformatics tools and/or processes of a pipeline are stored. Organized into `modules/nf-core/` and `modules/local/` directories depending if the module is sourced from nf-core (as seen here in Tutorial 2 and 4) or manually created (as we'll encounter in Tutorial 3), respectively. 
+    - **NOTE**: you'll notice that `modules` and `process` seem to get used interchangeably
+    - Generally speaking, a `module` is a complete, sharable unit of modular code
+    - a `module` encapsulates a single `process` definition, which provides all the components to execute a block of code (inputs, outputs, and script block)
+    - a `module`refers to the modular, shareable component while the `process` is the actual code contained within the `module`
+7) **subworkflows/**: mini workflows chained together
+    - Useful for a set of processes commonly used in a bioinformatics workflow (as we'll encounter in Tutorial 5).
+8) **bin/**: custom scripts that can be incorporated into modules. 
+    - **NOTE**: this directory is currently not present from our initial nf-core pipeline creation but we will make use of it down the road.
+
+For more details on all files and directories, see [here](https://nf-co.re/docs/developing/pipelines/template-files).
+
+A lot of files and directories have already been downloaded and prepared for you with that one command. That is the utility of the nf-core CLI. Nextflow expects and requires this pipeline organization of files and directories described, above. Now, we could have gone through the tedious process of creating all of these directories and files from scratch, but it's not worth it given the convenience of the nf-core CLI. And we will continue to make use of nf-core CLI to streamline our pipeline build. 
 
 > [!NOTE] <br>
-> fasterq-dump is a more up-to-date command compared to fastq-dump, but in contrast to fastq-dump, 
-> fasterq-dump does not have a built in --gzip option. So we need to perform this ourselves.
+> It is important that you familiarize yourself with this general directory structure of nextflow. <br>
+> These are common files and directories you'll see throughout all types of bioinformatics pipelines built with nextflow. <br>
+> The details of these files and directories will become clearer throughout the tutorial. 
+
+
+# Part II: Adding a new module and incorporating it into the pipeline
+
+### Add a new module via nf-core CLI
+
+Okay, let's continue building our pipeline! Navigate to our new pipeline directory:
+
 
 ```
-gzip *.fastq
+cd nf-core-myfirstpipeline
 ```
 
-![fasterq dump](images/fasterq_dump.png)
+**This is because subsequent nf-core CLI commands are meant to occur inside of the nextflow pipeline directory where it can locate files and directories for proper functioning.**
 
-
-Let's reorganize or FASTQ files into a reads directory
-
-```
-mkdir reads
-mv *.fastq.gz reads/
-```
-
-![reads dir](images/reads_dir.png)
-
-### Samplesheet creation
-
-Step 3, we need to make our samplesheet. As we saw before, this typically takes the form of CSV file:
-
-![samplesheet example](images/samplesheet_ex.png)
-
-Typically three columns, where the first column represents the SRR accession number (or a unique sample identifier based on your FASTQ file naming scheme) and second and third columns provide the relative paths to the forward and reverse reads for a given sample, respectively. Rows are added for each sample in your analysis. 
-
-Now, say you had 100+ samples to analyze. This CSV file will be tedious to create. So we automate this with a script. In addition to automation, I prefer to be lazy and not reinvent the wheel. There is a script already available from the nf-core community that serves our purpose of automating samplesheet creation. Let's obtain this python script:
+From here, let's try to install our first module (or tool). A common tool in every bioinformatics pipeline is FASTQC, where we first want to look at quality of our raw reads. 
 
 ```
-wget -L https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/fastq_dir_to_samplesheet.py
+nf-core modules install fastqc
 ```
 
-And then look at the help information for the python script:
+What do you notice?
+
+<br>
+
+<details>
+<summary>Reveal solution, here</summary>
+<br>
+
+It appears that this tool was already installed by default when we created our pipeline. Convenient! 
+
+<br>
+
+![FASTQC already installed](images/fastqc_preinstalled.png)
+
+<br>
+
+We can confirm that on our file explorer panel by revealing the contents of our `modules/` directory. Here, we see that FASTQ and MultiQC (we'll visit this in tutorial 6) are installed in a subdirectory called `nf-core/`. 
+
+</details>
+
+<br> 
+
+> [!NOTE] <br>
+> When we install modules (or tools) that have been [precompilied](https://nf-co.re/modules/) by the nf-core community, they will be installed into the `modules/nf-core/` directory. <br>
+> Spoiler alert: this is in contrast to what we'll see in tutorial 3 where we will create a new module from an nf-core template, which gets installed into the `modules/local/` directory. 
+
+Okay, let's keep building our pipeline! Raw reads are usually never good enough to use for downstream purposes. So, the next logical step in our pipeline is to trim the reads. For this, we will install the FASTP module.
 
 ```
-python3 fastq_dir_to_samplesheet.py -h
+nf-core modules install fastp
 ```
-![samplesheet help](images/samplesheet_help.png)
 
-We can see that the path to the FASTQ directory and name of our samplesheet are required inputs, along with other [optional] options. Go ahead and attempt to create the samplesheet as such: 
+![FASTP install](images/fastp_install.png)
+
+
+We see that fastp was automatically added to the `modules/nf-core/` directory. In addition, take note of the following line:
+
+```
+include { FASTP } from '../modules/nf-core/fastp/main'
+```
+
+<details>
+<summary>Spoiler</summary>
+
+This line will be needed to import the FASTP module into our `workflows/myfirstpipeline.nf` workflow
+
+</details>
+
+<br>
+
+### Explore the structure of a module main.nf file
+
+Select on the fastp directory and select the main.nf file:
+
+![FASTP module snapshot 1](images/fastp_module_1.png)
+
+The fastp main.nf file will open on the top panel. Let's stop here for a second to discuss something:
+
+<br>
+
+> [!NOTE] <br>
+> You will notice that the individual modules (and as you'll see, the subworkflows) also have a `main.nf` file <br>
+> But the `main.nf` file within your project directory (`nf-core-myfirstpipeline/main.nf`) is the "main" `main.nf` <br>
+> This is the result of a Domain Specific Language (DSL) [migration](https://docs.seqera.io/nextflow/migrations/dsl1) from DSL1 to DSL2 <br>
+> In DSL1, your whole workflow would be one longgggggg `main.nf` file. But now, in DSL2, the organization is briefly summarized as:
+
+<br>
+
+![DSL2 organization](images/dsl2_org.png)
+
+<br>
+
+> The takehome is that modularization was incorporated  in DSL2 where you could: <br>
+> 1) create multiple workflows, stored in `workflows/` (e.g. `workflows/myfirstpipeline.nf`) <br>
+> 2) define modules and subworkflows outside of the workflow (e.g `modules/nf-core/fastp/main.nf`) and pull them into your workflow <br>
+> 3) Pulling is performed by importing the modules or subworkflows into your pipeline script and the explicitly declaring them within your workflow
+
+
+Okay, now back to the FASTP main.nf file:
+
+<br>
+
+![FASTP module snapshot 1](images/fastp_module_1.png)
+
+<br>
+
+There's a lot to take in here. But let's break down each component for simplicity (each number is referenced in the image)
+
+1) The first line of this module defines the [process](https://docs.seqera.io/nextflow/process), and the process itself is uppercase as a result of [nf-core naming conventions](https://nf-co.re/docs/specifications/components/modules/naming-conventions#name-format-of-module-processes). We will stick to this naming convention because it will help distinguish pipeline components (modules vs channels vs operators) in our workflow.  
+    - Think of the process as the actual code present in this file while the module is a reusable component for a nextflow workflow 
+2)  tag represents a custom identifier for each task execution of your process. The $meta.id is uniquely tied to the [meta map](https://nf-co.re/docs/developing/components/meta-map) created for our sample(s) contained in the samplesheet.csv. This takes the form of:
+
+```
+[meta.id, [fastq_1, fastq_2]]
+```
+
+
+- **The meta.id tag is our unique sample identifier tied to our FASTQ reads that can be used in our process to link sample IDs to process inputs/outputs.**
+
+- For example, say you had 3 samples and they are all processed through FASTP. The tag makes sure that each unique sample ID is associated with its read pair, both when used as input into the FASTP module and when output as trimmed reads. 
+
+3) Refers to the computational specifications (CPUs, memory, and max time) stored in `conf/base.config`
+4) Declaration of our container for our process. Nextflow supports various [containers](https://docs.seqera.io/nextflow/container) but you will typically only see docker or apptainer (formerly known as singularity). Containers are pre-packaged software containing all of the dependencies and installations need to run your tool (in this case FASTP). This enhances modularization because each process can contain a unique container that is only used when called upon in a workflow. We will cover this in more detail in tutorial 3. 
+
+<br>
+
+> [!NOTE]
+> Notice how this FASTP container takes the form of `condition ? true : false` <br>
+> This is a conditional if-else statement you'll notice throughout other parts of the process code. `?` and `:` provide a concise way to write `if-else` statements in [Groovy](https://zetcode.com/groovy/conditionals/) <br>
+> This statement is essentially saying: `if` the container profile is apptainer/singularity, obtain and use the singularity container, `else`, obtain and use the docker container. <br>  
+
+<br>
+
+These first 4 components are examples of process [directives](https://docs.seqera.io/nextflow/process#directives), or put simply, optional settings for a process, though I would argue that the `meta.id` tag is becoming pretty standard (not optional) in nextflow pipelines.
+
+5) Inputs to the process. These should match the input descriptions on the nf-core [documentation](https://nf-co.re/modules/fastp/#input). 
+- Inputs take a qualifier, followed by a name. Various qualifiers can be viewed, [here](https://docs.seqera.io/nextflow/process#inputs). For FASTP, we see a val, path, and tuple qualifiers. <br>
+- The [val](https://docs.seqera.io/nextflow/process#input-variables-val), or value, qualifier accept any data type but it's best to refer to the documentation of the tool to see what type of value it expects. <br>
+- The [path](https://docs.seqera.io/nextflow/process#input-files-path) qualifier requires the path to input files. <br>
+- The [tuple](https://docs.seqera.io/nextflow/process#input-tuples-tuple) groups various qualifiers together, and in this case, uniquely ties the val of our `meta.id` tag (aka sample name) to the path of our `reads` <br>
+        - and to the path of an adapter file (but we'll remove this `path(adapter_fasta)` qualifier as we begin to edit this module)
+6) Outputs of the process. Again, these should match the nf-core documentation of FASTP [outputs](https://nf-co.re/modules/fastp/#output). These also take qualifiers. Just focus on the first line.
+- Here, we are creating a tuple output to link our `meta.id` (aka sample ID) to the path of our `trimmed_reads`. 
+- The `emit:` option, as you'll soon see, will also us to channel the `trimmed_reads` to the subsequent module in our `workflows/myfirstpipeline.nf` pipeline.
+
+<br>
+
+Let's keep scrolling through our FASTP module `main.nf` file and view a second snapshot of its contents:
+
+![FASTP module snapshot 2](images/fastp_module_2.png)
+
+
+7) [when](https://docs.seqera.io/nextflow/process#when) is a conditional logic statement to run the process (or not). <br>
+- To be honest, I don't use this at all. And by default, the statement currently sets `null==true`, meaning this process is set to run by default unless you explicitly state a condition in which this process should (or should not) run
+8) The [script](https://docs.seqera.io/nextflow/process#script) section. The script itself is interpreted as Bash script by default. We start with definition (def) arguments which are unique to script itself. For example, in this example:
+
+```
+def prefix = task.ext.prefix ?: "${meta.id}"
+```
+
+- It's saying, if a `ext.prefix` is defined somewhere (as we'll learn, that "somewhere" is typically within the `conf/modules.config` file), then the `prefix` argument is assigned that string <br>
+- Otherwise, `prefix` is assigned to the `meta.id` tag (aka the sample ID). In other words, `meta.id` is assigned to `prefix` if `ext.prefix` is null. See [Elvis operator](https://zetcode.com/groovy/conditionals/)
+
+<br>
+
+<details>
+<summary>The other arguments in this image include... reveal here</summary>
+
+```
+def args = task.ext.args ?: ''
+```
+if `ext.args` is present (which, as you'll see, is also declared in `conf/modules.config`) use it, else it's blank
+
+<br>
+
+```
+def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
+```
+if the `--adapter_fasta` input parameter is present, define is as `adapter_fasta`, else it's blank
+
+<br>
+
+```
+def fail_fastq = save_trimmed_fail && meta.single_end ? "--failed_out ${prefix}.fail.fastq.gz" : save_trimmed_fail && !meta.single_end ? "--failed_out ${prefix}.paired.fail.fastq.gz --unpaired1 ${prefix}_R1.fail.fastq.gz --unpaired2 ${prefix}_R2.fail.fastq.gz" : ''
+```
+if the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is from single end reads, then create the parameter `--failed_out ${prefix}.fail.fastq.gz` parameter/output, <br>
+else if the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is *not* (`!` character in `!meta.single_end`) from single end reads, <br>
+then output (`--failed_out`) failed paired reads as `${prefix}.paired.fail.fastq.gz`, output (`--unpaired1`) failed unpaired forward reads as `${prefix}_R1.fail.fastq.gz`, and output (`--unpaired2`) failed unpaired reverse reads as `${prefix}_R2.fail.fastq.gz"`,  <br>
+otherwise, the `fail_fastq` argument is blank
+
+<br>
+
+```
+def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fastp.fastq.gz" : "--out1 ${prefix}_R1.fastp.fastq.gz" )
+```
+if `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br> 
+else if `false` AND if the `meta.id` tag is from single end reads, the create the `--out1 ${prefix}.fastp.fastq.gz` parameter/output, <br>
+else create the `--out1 ${prefix}_R1.fastp.fastq.gz` parameter/output
+
+<br>
+
+```
+def out_fq2 = discard_trimmed_pass ?: "--out2 ${prefix}_R2.fastp.fastq.gz"
+```
+if `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br>
+else if `false` and the `meta.id` tag is from single end reads, the create the `--out2 ${prefix}.fastp.fastq.gz` parameter/output, <br> 
+else create the `--out2 ${prefix}_R1.fastp.fastq.gz` parameter/output
+
+</details>
+
+<br>
+
+Following `def` arguments, in it's simplest form, are three, double quote characters. It's more like a """quote character sandwich""" encapsulating the bash script. For example: 
+
+<br>
+
+```
+process FASTP {
+    directives go here
+    
+    input:
+    #place inputs here
+    
+    output: 
+    #place outputs here
+
+    when: 
+    #optional conditional statement for running process
+
+    script:
+    def arguments 
+    """
+    Bash script is placed here
+    """
+}
+```
+
+<br>
+
+We essentially have that within our FASTP bash script, except it is a little more complicated. An `if-elseif-else` statement defines three possible script blocks, each encapsulated in the:
+
+```
+"""
+quote sandwich
+"""
+```
+
+as seen in the three images, below: 
+
+Exhibit A
+![FASTP subscript A](images/fastp_subscript_a.png)
+
+<br>
+Exhibit B
+
+![FASTP subscript B](images/fastp_subscript_b.png)
+
+<br>
+Exhibit C
+
+![FASTP subscript C](images/fastp_subscript_c.png)
+
+<br>
+Basically, the FASTP bash script if split into an if-elseif-else statement that says:
+
+```
+if "my reads are interleaved" {
+    """
+    run this bash script
+    """
+} else if "my reads are single-end reads" {
+    """
+    run this bash script
+    """
+} else {
+    """
+    run this bash script
+    """
+}
+```
+
+Now, we have prior knowledge that are reads are paired, meaning we have a forward and reverse FASTQ file for our sample. Examine the prior three images of the FASTP script.
+Which exhibit (or rather script block) do you think applies to our FASTQ read files (A, B, or C)?
+
+<br>
+
+<details>
+<summary>Reveal solution, here</summary>
+
+![FASTP subscript C answer](images/fastp_answer_c.png)
+
+The big tell is that this last script accepts paired reads, as shown by the `--in1` and `--in2` fastp input parameters.
+
+</details>
+
+<br>
+
+> [!NOTE] <br>
+> `inputs`/`directives` transformed to definition arguments, defined prior to the script block, are accessed within the bash script via nextflow's dollar sign (`$`) variable <br>
+
+For example `$prefix` was defined from the `def prefix = task.ext.prefix ?: "${meta.id}"`, which, `$prefix` in this case is assigned the `meta.id` that was a directive defined at the beginning of this process code, `tag "$meta.id"`. 
+
+`${reads[0]}` is another example. This was defined in the `input` section of the script as such:
+
+```
+input: 
+tuple val(meta), path(reads), path(adapter_fasta)
+```
+
+We will see that this input tuple comes from the samplesheet channel which takes the form: 
+
+```
+[meta.id, [fastq_1, fastq_2]]
+```
+
+So, the first `val` input in this tuple is the meta.id, followed by a paired `path` input to both the forward and reverse read files. In the script block, `${reads[0]}` is a nextflow variable that can capture the forward read (and `${reads[1]}` captures the reverse read).
+
+
+
+<details>
+<summary>Advanced information</summary>
+
+Nextflow variables, defined in the inputs and def arguments section take the form of `$variable`. Whereas bash variables need to be defined between the quote sandwich and can then be accessed via prefixing a back-slash character to the "$" character, `\$`. For simplicity, look at the following example:
+
+```
+process EXAMPLE {
+    input:
+    path(reads)
+
+    script:
+    """
+    Test="hello"
+    echo "Nextflow: $reads"
+    echo "Bash: \$Test"
+    """
+}
+```
+
+`reads` is a nextflow variable since it was defined in the input section and `Test` is a bash variable since it is only defined within script block. 
+
+</details>
+
+<br>
+
+
+The last part of the FASTP process is the [stub](https://docs.seqera.io/nextflow/process#stub) section:
+
+
+![Stub](images/stub.png)
+
+<br>
+
+This is supposed to be a way to test the functionality and workflow logic of your pipeline without taking up a lot of time and/or space running the real commands, as in the real fastp tool defined in the bash script, above. We're not going to cover stub in this tutorial because I don't make much use of it. And, I think you should always test the true script out to ensure proper functionality. 
+
+<br>
+
+> [!NOTE] <br>
+> Everything provided within this FASTP process is just default from the nf-core community. <br>
+> As you'll soon see, we can edit the process to add/remove items. <br>
+> nf-core CLI commands provide the template foundation, you edit as you please. 
+
+<br>
+
+Wow! That was a lot to take in. But don't worry, this will all make more sense as we begin to edit this FASTP process and incorporate the module into our pipeline. Let's get our hands (keyboards?) dirty!
+
+Now, for any module (or subworkflow, which we'll learn in tutorial 5) we need to repeat the same **required** 3 steps to incorporate this newly added component into our overall workflow. And, there's 3 optional steps that can be edited, as well.
+
+![Nextflow new addition](images/nextflow_new_addition_FINALIZE.png)
+
+This figure summarizes the steps that we need to perform. The purple boxes are required and the green boxes are optional, depending on the module/subworkflow. Everything starts from the module (or subworkflow) that we add to the pipeline. <br>
+In this case, the `modules/nf-core/fastp/main.nf` file needs to be edited with the correct `directives`, `inputs`, `outputs`, script `arguments`, and the `script` itself. 
+- Many of the elements within this file refer to various others files/directories organized within a nextflow pipeline including: <br>
+    * the `--input samplesheet.csv` that is transformed into a `meta` tagged channel 
+    * modules configuration file (`modules.config`) <br>
+    * computational resources configuration file (`base.config`) <br>
+    * custom scripts (`bin/`) <br>
+    * reference files or databases (`assets/`) <br>
+
+Finally, this module needs to be explicitly defined within our `workflows/myfirstpipeline.nf` workflow. Let's work through each of these steps outlined in the figure. 
+
+### FASTP module incorporation step 1
+
+**Step 1.** Edit the main.nf file of the module or subworkflow of interest. Here, this module is `modules/nf-core/fastp/main.nf`
+
+Here is snapshot of the beginning of the fastp main.nf file, prior to edits:
+
+![FASTP module before part I](images/fastp_module_before_1.png)
+
+<br>
+
+- Make the following edits <br>
+    * Change label 'process_medium' to 'process_low' <br>
+        - Our codespace is limited in computing resources (2 CPUs, 8 GB memory). We will check these resources in a bit to make sure our compute request settings match compute capability. <br>
+    * Remove path(adapter_fasta) <br>
+        - We will not add a custom adapter file. We'll rely on FASTP's internal adapter auto-detection. <br>
+    * Change the emit channel for the trimmed reads from reads to trimmed_reads <br>
+        - Just more intuitive since we're transforming raw reads to trimmed reads <br>
+
+<br>
+
+![FASTP module after part I](images/fastp_module_after_1.png)
+
+> [!NOTE] <br>
+> The indentation is for aesthetic purposes only. It is not required as part of Nextflow syntax. <br>
+> However, it does make it more human-readable. I do suggest adopting indentation practices as already shown in the template files. <br>
+
+Okay, moving the down to the script section within the FASTP process. Let's look at a snapshot of the script, before edits:
+
+![FASTP module before part II](images/fastp_module_before_2.png)
+
+See those parts boxed in red? Let's get rid of them because we are no longer are adding a custom adapter file. It was removed from input and thus would error out the script if these parts were left in because the adapter_list variable would not be detected. 
+
+![FASTP module after part II](images/fastp_module_after_2.png)
+
+Awesome, almost there! The script is pretty long because of the `if-elseif-else statement`. We need to keep removing any presence of this adapter file. Scrolling down this script section a bit more:<br>
+
+![FASTP module before part III](images/fastp_module_before_3.png)
+
+Again, remove the red-boxed code. 
+
+![FASTP module after part III](images/fastp_module_after_3.png)
+
+Edits are complete. Let's save the file: 
+
+```
+ctrl + s
+```
+
+### FASTP module incorporation step 2
+
+
+**Step 2.** Edit `conf/modules.config` file to add tool-specific parameters
+
+Open the modules.config file. This is what it should look like now: 
+
+![FASTP module config before](images/modules_config_before.png)
+
+And add the following edits (green box in the image, below):
+
+```
+withName: FASTP {
+    ext.args = '--cut_right --cut_window_size 4 --cut_mean_quality 20'
+}
+```
+
+![FASTP module config after](images/modules_config_after.png)
+
+- Some things to note: <br>
+    * all modules start with the `withName` line to reference the module itself <br>
+    * Navigate back to the `modules/nf-core/fastp/main.nf` file and look for the line: <br>
+
+        ``` 
+        def args = task.ext.args ?: ''
+        ```
+        directly beneath the "script:" line. <br>
+
+    * This line is looking for a `ext.args` argument inside the `modules.config` file
+        - In practice, it can actually be defined in any config files but let's just focus on `modules.config` file for simplicity
+
+FASTP arguments can be reviewed [here](https://github.com/opengene/fastp#filtering)
+
+Why would tool arguments be separate from the `modules/nf-core/fastp/main.nf` file?
+
+Take a moment to think about it and then check the possible answers:
+
+<br>
+
+<details>
+<summary>Reveal solution, here</summary> <br>
+
+1. It keeps the modules modular and shareable. the `modules/nf-core/fastp/main.nf` is generally a core template that anyone can use, whereas your unique pipeline parameters for all tools gets defined within `modules.config`. <br>
+
+2. Easy access to all tool parameters. Instead of going through each main.nf file within the `modules/` directory to find specific parameters, it's all concisely organized within `modules.config`. <br>
+
+3. What if you wanted to use a module twice within a pipeline, but with different arguments? This is possible with [module aliases](https://docs.seqera.io/nextflow/workflow#calling-processes-and-workflows) and its incorporation is provided as a guided challenge task at the end of this 2nd tutorial. 
+</details>
+
+<br>
+
+Also note the:
+
+```
+publishDir = [
+        path: { "${params.outdir}/${task.process.tokenize(':')[-1].tokenize('_')[0].toLowerCase()}" },
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> filename.equals('versions.yml') ? null : filename }
+    ]
+```
+
+At the top of the `modules.config` file (purple box in the image, above).
+
+This is a global configuration setting for all modules part of your pipeline. 
+
+- This `publishDir` directive is a way to specify output files from a pipeline. 
+    - The first `path` line is organizing the output directory (defined by the `--outdir` parameter) with subdirectories created and named by each bioinformatics tool used in the pipeline, with the name converted to lowercase.
+    - The second `mode` line defines how the results are taken from the `work/` directory and placed into your output directory. The most common setting for this is typically `copy`, meaning results will be copied from the `work` directory to your output directory. You can confirm this by finding this parameter with the global `nextflow.config` file (see image, below). 
+    - The `saveAs` line controls whether a file is published to the output directory and can handle renaming. Here, we are basically saying, if we detect a file called versions.yml, do not publish it, otherwise publish all other output files to the output directory.  
+
+
+![Publish dir mode](images/publish_dir.png)
+
+You can override the default `publishDir` settings by creating a `withName:` line and redefining the `publishDir` settings on a per module basis, as seen with the MultiQC module within the `modules.config` file, two images above. 
+
+
+### FASTP module incorporation step 3
+
+**Step 3.** Edit the `workflows/myfirstpipeline.nf` file to include the new module/subworkflow
+
+Open the `workflows/myfirstpipe.nf` file. This is what it should look like now, at the beginning of the file: <br>
+
+![Workflow before I](images/workflow_before_1.png) <br>
+
+Remember when we first installed the FASTP module with the nf-core CLI. I mentioned to take note of something. What was that?
+
+
+<details>
+<summary>Reveal solution, here</summary> <br>
+The following line: <br>
+
+```
+include { FASTP } from '../modules/nf-core/fastp/main'
+```
+</details>
+
+<br>
+
+You see, this is where we import all modules and subworkflows associated with our workflow. We need to add that line to include the FASTP module within our workflow, like so:
+
+<br>
+
+![Workflow after I](images/workflow_after_1.png)
+
+<br>
+
+Now locate the section in the workflow where FASTQC is called:
+
+![Workflow before II](images/workflow_before_2.png) <br>
+
+See that purple arrow? Add this line just above the FASTQC module:
+
+```
+ch_samplesheet.view()
+```
+
+Here, we are using the [view](https://docs.seqera.io/nextflow/reference/operator#view) operator to print the output of the channel `ch_samplesheet`. We basically want to look at what is represented by our `meta.id` tag.
+
+And do you see that orange arrow in the image above? Let's place our FASTP module within this space, like so: 
+
+> [!NOTE] <br>
+> The location of these modules in "logical" order is not required but makes sense. <br>
+> It's always best to make your workflow as human-readable as possible. <br>
+
+<br >
+
+![Workflow after II](images/workflow_after_2.png)
+
+This is what was placed into the workflow:
+
+```
+//
+// MODULE: Run FASTP read trimming
+//
+FASTP(
+    ch_samplesheet,
+    false,
+    false,
+    false
+)
+ch_trimmed_reads = FASTP.out.trimmed_reads
+```
+
+Let's focus on the inputs, first. We need the same number of inputs as declared within the `modules/nf-core/fastp/main.nf` file. 
+
+- The expected input parameters for FASTP as defined by the nf-core community can be viewed [here](https://nf-co.re/modules/fastp/#input), and are discussed here, as well:
+    - The first input expected was a tuple containing 3 qualifiers (the meta tag, the reads, and the adapter_fasta)
+        - However, we edited the script to remove the adapter_fasta file so it now only expects a tuple with 2 qualifiers, so we can just keep it as the samplesheet
+    - The second input is a boolean (true/false) declaration on whether we want to discard the trimmed reads (or not)
+    - The third input is a boolean (true/false) declaration on whether we want to save reads that failed the trimmming thresholds
+    - The fourth input is a boolean (true/false) declaration on whether we want to merge trimmed reads
+
+> [!NOTE] <br>
+> `//` in nextflow is equivalent to the `#` symbol in bash. <br>
+> It is used for descriptive commenting within your script. <br>
+> Not required but is good practice so others can understand your code. <br>
+
+
+All we really care about is the trimmed reads so I input false for all of these (plus, they take up extra storage)
+
+Next was specifying the channel containing our trimmed reads. Nextlow channel outputs from modules/subworkflows take the form of:
+
+```
+MODULENAME.out.emit_name
+```
+
+So in this case, our module was FASTP (captialized), "out" (as in output), and then whatever we name we gave after "emit:" within the output for the trimmed reads. Remember, we changed "reads" to "trimmed_reads". So putting it all together, it's:
+
+```
+FASTP.out.trimmed_reads
+```
+
+Now, not required, but I also chose to rename the channel "ch_trimmed_reads", so that I know it's a (ch)annel.
+
+
+### FASTP module incorporation step 4
+
+**Step 4.** Adjust computing specifications because of the resource limitations of GitHub codespace
+
+And there are additional optional 
+
+4. Edit conf/base.config to specify computing resources
+5. Optional: Add external components associated with the module (e.g. reference file) to the assets/ directory
+6. Add external scripts to the bin/ directory
+
+Need to also change base.config for process.low
+
+
+
+
+
+
+
+Formatting is purely aesthetic.  
+
+
+
+
+
+
+
+## Part III: Testing the pipeline
+
+
+Navigate back to the launch directory: 
+
+```
+cd /workspaces/mdhhs_nextflow_training/nextflow_training
+```
+
+-You'll notice three files:
+- sample_download.sh
+    - similar commands as we ran in tutorial 1, but now contained within a shell script. 
+    - The FASTQ files are now from a [measles WGS sequencing sample](https://www.ncbi.nlm.nih.gov/sra?LinkName=biosample_sra&from_uid=61933769)
+- fastq_dir_to_samplesheet.py
+    - The python script we used in tutorial 1 to create the `samplesheet.csv` file
+- run_nextflow_analysis.sh
+    - A bash script to run our nextflow pipeline
+
+
+First, we need to change our sample. This was originally an *E. coli* sample but we want to download a measles sample. Open the sample_download.sh script and make the following edits:
+
+![Change sample for download](images/change_sample.png)
+
+
+**All occurences of SRR3747659 should be replaced with SRR39817210**
+
+Save the script:
+
+```
+crtl + s
+```
+
+And now, download the FASTQ files using the SRA Toolkit:
+
+
+```
+bash sample_download.sh
+```
+
+![Download reads](images/download_reads.png)
+
+Prepare the samplesheet:
 
 ```
 python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
 ```
 
-Ope, we ran into an error! 
+![Prepare samplesheet](images/prepare_samplesheet.png)
 
-![python error](images/python_error.png)
 
-It states that no FASTQ files were found and then states that we need to check our read extension parameters. On the file explorer panel, open the fastq_dir_to_samplesheet.py script. Take a moment to try to figure out what is wrong. 
+Edit the `run_nextflow_analysis.sh` file so that we're running the correct pipeline. Right now, the script still has the nf-core-demo pipeline specified: 
 
-<details>
-<summary>Reveal solution, here</summary>
-The python script, by default, expects read 1 and read 2 extensions to be "_R1_001.fastq.gz" and "_R2_001.fastq.gz", respectively. <br>
-However, our current read 1 and read 2 extensions are "_1.fastq.gz" and "_2.fastq.gz", which is why the script is not finding our FASTQ files.
+![Script before](images/script_before.png)
+
+We need to replace `nf-core-demo_1.1.0/main.nf` with `nf-core-myfirstpipeline/main.nf`: 
+
+
+![Script after](images/script_after.png)
+
+
+Now, start the pipeline
+
+```
+bash run_nextflow_analysis.sh
+ 
+```
+
+Wooo, the ourpipeline launched: 
+
+![Pipeline launch](images/pipeline_launch.png)
+
+
+And succeeded: 
+
+![Pipeline success](images/pipeline_success.png)
+
+
+Convince yourself that you added the FASTP module successfully. Attempt to navigate to your work directory where the FASTP process occurred and was stored for our sample: 
+
+```
+cd work/unique_hash_to/fastp_process_directory
+```
+
+![FASTP work dir](images/fastp_work.png)
+
+**Your hash will be unique and different from the one shown in the image.**
+
+And view the command that was run:
+
+```
+cat .command.sh
+```
+
+![FASTP script](images/fastp_script.png)
+
+- As we can see:
+    - It was the third script block run from the FASTP module, as we determined prior (refer to the "Exibit C" image)
+    - Inputs and outputs match what is in the FASTP process script (`modules/nf-core/fastp/main.nf`)
+    - Our FASTP paramaters were added from the `modules.config` file via `ext.args`
+
+
+Awesome! But remember when we added the `view.()` operator to look at the contents of our samplesheet channel?
+
+```
+ch_samplesheet.view()
+```
+
+I'm not sure if you caught it but just after we launched the pipeline, you might have noticed this output:
+
+![ch_samplesheet view](images/ch_samplesheet.png)
+
+
+Do you see that? The line: 
+
+```
+[[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/reads/SRR39817210_R1_001.fastq.gz, /workspaces/mdhhs_nextflow_training/reads/SRR39817210_R2_001.fastq.gz]]
+```
+
+This is the channel created from our `samplesheet.csv` file. We can see that it is a tuple, the first being the id, which is the `${meta.id}` tag that is added as a directive within the FASTP module. The second part is what ultimately becomes the `path(reads)` input, where this is a combined read pair. So when we reference `reads[0]`, we can access the forward read and when we reference `reads[1]`, we can access the reverse read.
+
+
+Hopefully the `samplesheet.csv` > `ch_samplesheet` > `meta.id` > `tuple val(meta), path(reads)` connection is starting to make sense.
+
+**This `meta.id` tag will hold for the remainder of the pipeline build and will be incorporated into every module we use. Again, this ties a unique sample ID to it's respective FASTQ read pair files**
+
+### Troubleshoot error
+
+In another nextflow run I tried for this pipeline, I ran into the following error:
+
+
+![Channel error](images/channel_error.png)
+
+
+My `workflows/myfirstpipeline.nf` script looked like this:
+
+
+![Troubleshoot channel](images/troubleshoot_channel.png)
+
+Okay, so we see at line 49 we have: 
+
+```
+ch_trimmed_reads = FASTP.out.trimmed_reads
+```
+
+And the error is stating that there is `No such property: trimmed_reads`
+
+
+What do you think is the issue?
 
 <br>
 
-![python issue](images/python_issue.png)
+<details>
+<summary>Reveal solution, here</summary>
+
+<br>
+
+I forgot to edit the emit channel in the `modules/nf-core/fastp/main.nf` script to match the `trimmed_reads` named channel output in my `workflows/myfirstpipeline.nf` (line 49):
+
+![Troubleshoot channel](images/wrong_emit_ch.png)
+
+You see how I kept the emit channel for the trimmed reads as `reads`. `FASTP.out.trimmed_reads` is not an accessible output channel in the current state of my pipeline. I would need to edit this emit channel in `modules/nf-core/fastp/main.nf` to `trimmed_reads` for proper script functioning.  
+
+</details>
+
+<br>
+
+# Recap 
+
+- Congratulations! You just successfully added a module to your pipeline. In doing so, we learned:
+    - How to use the nf-core CLI to add a module
+    - The layout of a module file, specifically `modules/nf-core/fastp/main.nf`
+    - How to incorporate the module into our workflow through editing of:
+        - the module file itself: `modules/nf-core/fastp/main.nf`  
+        - the workflow script: `workflows/myfirstpipeline.nf`
+        - the modules parameter file: `conf/modules.config`
+        - the computing configuration file: `conf/base.config`
+
+
+In the next lesson, we will learn how to add a local module, aka add a module from scratch. In the meantime, expand your understanding of nextflow with the challenge below. You'll learn how to reuse a module within a pipeline. 
+
+# Challenge: Adding a module alias
+
+Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training).
+
+If you're relaunching your codespace, lauch the `tutorial_2_challenge` branch to have all progress made prior so that you can jump directly into this challenge. 
+
+![Challenge branch](images/challenge_branch.png)
+
+Refer to the pipeline image at the beginning of this tutorial. We typically run FASTQC on the raw reads and then again on the trimmed reads to make sure that our reads are better quality post-trimming. 
+
+So let's do that! Edit the `workflows/myfirstpiple.nf` script and add the FASTQC module again just below our FASTP module:
+
+```
+FASTQC(ch_trimmed_reads)
+```
+
+![FASTQC module repeat](images/add_fastqc_mod.png)
+
+Notice this is slightly different from the first FASTQC module call. In the first FASTQC module, the input was `ch_samplesheet`. In this next run of FASTQ, we want to analyze our trimmed reads, so we use the channel output from the FASTP module, FASTP.out.trimmed_reads, that we renamed to `ch_trimmed_reads`.
+
+
+Okay, so let's rerun our nextflow analysis:
+
+```
+bash run_nextflow_pipeline.sh
+```
+
+Ooo nooooo... we ran into an error:
+
+![FASTQC error](images/fastqc_error.png)
+
+FASTQC has already been used and can't be used again in this manner. We will introduce the `module alias` functionality so that we can use the FASTQC module twice within our workflow.
+
+At the top of the  `workflows/myfirstpiple.nf` script, where we import our modules/subworkflows, make the following edits.
+
+Before:
+
+![module import before](images/module_import_before.png)
+
+
+And after:
+
+![module import after](images/module_import_after.png)
+
+The original FASTQC import line was edit to:
+
+```
+include { FASTQC as FASTQC_RAW} from '../modules/nf-core/fastqc/main'
+```
+
+And an additional FASTQC import line was added:
+
+```
+include { FASTQC as FASTQC_TRIMMED} from '../modules/nf-core/fastqc/main'
+```
+
+The `FASTQC as FASTQ_module_alias` is the key part to successfully create a module alias. We can then refer to `FASTQC_RAW` and `FASTQC_TRIMMED` in our workflow to distinguish between these two modules. Let's continue editing our `workflows/myfirstpiple.nf` file. 
+
+
+
+
+
+
+Also change the:
+
+```
+ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
+```
+
+<br>
+
+to:
+
+<br>
+
+```
+ch_multiqc_files = ch_multiqc_files.mix(FASTQC_raw.out.zip.map{ _meta, file -> file })
+```
+
+<br>
+
+We will learn about this more in tutorial 6 when we learn MultiQC but for now, just make the change so that the pipeline runs. 
+
+
+#FASTQC module aliases run but have same results output
+
+Technically the pipeline ran and was "sucessful", but is everything as expected? Check out your results? What do you notice is wrong?
+
+<details>
+<summary>Reveal solution, here</summary>
+There is only one output for FASTQC, so the results from the raw reads must have been overriden by the trimmed reads after FASTQC was run again.
 
 </details>
 
 
-We have 1 of 2 options here:
-1) Add additional parameters, --read1_extension "_1.fastq.gz" --read2_extension "_2.fastq.gz", to our python3 fastq_dir_to_samplesheet.py call
-2) Change the extension of our FASTQ files to conform with the expected default
 
-I'm going to take option 2, because it better conforms to standard naming conventions within the sequencing community and, we don't typically obtain FASTQ files from SRR. We routinely obtain FASTQ files from BaseSpace, which normally outputs FASTQ files with "_R1_001.fastq.gz" (forward read) and "_R2_001.fastq.gz" (reverse read) extensions. 
 
-Change into the reads directory and change the file names:
 
-```
-cd reads/
-mv SRR3747659_1.fastq.gz SRR3747659_R1_001.fastq.gz
-mv SRR3747659_2.fastq.gz SRR3747659_R2_001.fastq.gz
-```
 
-![Extension change](images/extension_change.png)
 
-Return to the parent (mdhhs_nextflow_training) directory and try re-running the script
 
-```
-cd ..
-python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
-```
 
-![samplesheet success](images/samplesheet_success.png)
 
-Beautiful! Now it seems to have worked. If we select the samplesheet.csv file from the file explorer pane, we should now see that the relative paths to the forward and reverse reads are in the reads/ directory with the "_R1_001.fastq.gz" and "_R2_001.fastq.gz" extensions, respectively. 
-
-### Alter the nextflow base.config file to conform to CPU and memory availability on our VM
-
-Now, we need to perform this 4th step because of the computational limits of codespace.  
-
-Can you recall what how many CPUs and memory is provided by our VM on codespace?
-
-<details>
-<summary>Reveal solution, here</summary>
-2 CPU cores
-8 GB of RAM
-</details>
-
-We need to place computational limits on our nextflow processes in a way that reflects the limits of our computing power. Select on the base.config file contained within nf-core_demo/1_1_0/conf/:
-
-![base.config before](images/base_config_before.png)
-
-Alter the following lines so that CPU is changed to 1 and memory is changed to 6.GB
-
-![base.config after](images/base_config_after.png)
-
-And save the file:
-
-```
-ctrl+s
-```
-
-# Alternative: troubleshoot with copilot ask
-
-If I tried running the pipeline before the previous edits, I would receive one of the following errors:
-
-![CPU issue](images/cpu_issue.png)
-
-<br>
-
-![Memory issue](images/memory_issue.png)
-
-This issue points to computational limits and is somewhat intuitive. Let's see if an LLM can help us troubleshoot this. 
-
-Press F1 and search for the Ask and select "Chat: Open Chat (Ask)"
-
-![Copilot ask](images/copilot_ask.png)
-
-A Copilot chat panel will open on the right side of your screen. Also notice if at the end of the error message that we should check the .nextflow.log file for details. We'll use that to our advantage to provide some context to the LLM chat tool. Select the .nextflow.log file from your file explorer panel and then you should notice that it appears as context within your LLM chat. In addition paste the following message and copy the error your received: 
-
-![Copilot troubleshoot](images/copilot_troubleshoot.png)
-
-Prompt 1:  Can you help troubleshoot this error: 
-ERROR ~ Error executing process > 'NFCORE_DEMO:DEMO:SEQTK_TRIM (SRR3747659)'
-
-Caused by:
-  Process requirement exceeds available memory -- req: 12 GB; avail: 7.8 GB
-
-Prompt 2: But what file is specifying memory?
-
-Prompt 3 (with base.config context): This file specifies memory and cpu but where are the process labels being used?
-
-
-### Run the nf-core-demo pipeline
-
-Now, the 5th and final step of this nf-core demo pipeline is to simply run it:
-
-```
-nextflow run nf-core-demo_1.1.0/1_1_0/ -profile docker --input samplesheet.csv --outdir results
-```
-Success!
-
-![nf-core demo success](images/nfcore-demo_success.png)
-
-You just performed all the steps I previously prepared for you in Part I.
-
-*Generally*, these are the major steps to get a nextflow pipeline running:
-
-1) Obtain pipeline of interest
-2) Obtain FASTQ files
-3) Prepare sample sheet
-4) Use nextflow run with required parameters to start the pipeline.
-
-But, as you can see here, we needed an additional step due to an error. Other things that may be required prior to a nextflow run is obtaining an external database. Some databases are too large to store on GitHub. 
-
-## Part III: Obtaining a CDC pipeline from GitHub and performing a test run
-
-Only nf-core community-approved pipelines are stored on nf-core. But, you can also obtain nextflow pipelines from GitHub. And they do not have to abide by nf-core standards. For example, the CDC has created plenty of pipelines that are useful to the public health community. 
-
-Let's take [MIRA-NF](https://github.com/CDCgov/MIRA-NF) as an example. This pipeline can be used for influenza, SARS-CoV-2, or RSV analysis and accepts Illumina and ONT data. First, make a new directory call mira_test and change into that directory:
-
-```
-mkdir mira_test
-cd mira_test
-```
-
-![mkdir mira_test](images/mira_mkdir.png)
-
-Now, git clone the repository. If you navigate to the MIRA-NF GitHub repository link, above, you can select the following items in order to copy the MIRA-NF URL:
-
-![mira url](images/mira_url.png)
-
-On your codespace terminal, enter the following:
-
-```
-git clone -b v2.2.1 https://github.com/CDCgov/Mira-nf.git 
-```
-
-Where you can paste the URL you copied from the MIRA-NF GitHub repository after "git clone". I also added the branch flag (-b) to specify the release we want to clone. You can find releases on the right panel of the GitHub repository: 
-
-![mira release](images/pipeline_releases.png)
-
-You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your computer:
-
-![mira clone](images/mira_clone.png)
-
-```
-ls Mira-nf
-```
-
-You might notice that some of these files and directories in this pipeline look similar to the nf-core-demo pipeline. We'll learn more about these files and directories as we begin to build out our own pipeline in the following tutorials. 
-
-For now, enter the following command to run a built-in test of the pipeline:
-
-```
-nextflow run Mira-nf \
-    -profile docker \
-    --e 'Flu-Illumina' \
-    --input Mira-nf/tests/test_data/flu_wgs_illumina/samplesheet.csv \
-    --outdir results/ \
-    --runpath Mira-nf/tests/test_data/flu_wgs_illumina/
-```
-
-![mira error](images/mira_error.png)
-
-Awesome, another error! In contrast to the error in Part II, this one does not seem as intuitive. And this is the problem with nextflow, sometimes. Because this error is very specific to nextflow, I will take advantage of an LLM that was built specficially with nextflow in mind. 
-
-Sign up for [Seqera AI](https://ai.cloud.seqera.io/login). In the broader context, the [Seqera Platform](https://seqera.io/platform/) is a GUI-based software for launching, managaing, and monitoring nextflow pipelines. But, they also have this neat LLM that is available for all to use.
-
-Once you're logged into a Seqera AI session, you can copy the whole error message from your terminal and paste it into the seqera AI. I then added a message re-specifying the version of Nextflow I'm using. 
-
-![Seqera AI ask](images/seqera_ai_ask.png)
-
-Notice when you copy and pasted the error message that a context-dependent window popped-out. That is a useful feature of Seqera AI. 
-
-![Seqera AI response](images/seqera_ai_response.png)
-
-Alright, we received a message that this is due to the strict config parser (v2). This may be a good time to introduce nextflow's [strict syntax](https://docs.seqera.io/nextflow/strict-syntax). The gist of it is that in Nextflow version 26.04 and later, the strict sytax parser (v2) is turned on by default, and has updated rules as to what syntax is allowed when building nextflow pipleines.  
-
-The workaround solution, which is provided as a temporary solution by Seqera AI, is to specify that we want syntax parser v1:
-
-![Seqera AI solution](images/seqera_ai_solution.png)
-
-And we can achieve this by exporting this environmental variable (NXF_SYNTAX_PARSER):
-
-```
-export NXF_SYNTAX_PARSER=v1
-```
-
-![NXF_SYNTAX_PARSER](images/nxf_syntax_parser.png)
-
-Now, try re-running the pipeline as we did before:
-
-```
-nextflow run Mira-nf \
-    -profile docker \
-    --e 'Flu-Illumina' \
-    --input Mira-nf/tests/test_data/flu_wgs_illumina/samplesheet.csv \
-    --outdir results/ \
-    --runpath Mira-nf/tests/test_data/flu_wgs_illumina/
-```
-
-![mira rerun](images/mira_rerun.png)
-
-
-Success!
-
-![mira success](images/mira_success.png)
-
-But notice in the temporary workaround solution provided by Seqera AI, it stated that if we "can't refactor yet", use the v1 syntax parser. The idea of refactoring is taking older pipelines built in Nextflow versions <26.04 and updating them to abide by the new syntax rules. Because as you can see from the [strict syntax](https://docs.seqera.io/nextflow/strict-syntax) documentation, eventually the "NXF_SYNTAX_PARSER=v1" option will be phased out in later versions of nextflow. 
-
-![Nextflow parser](images/nextflow_parser.png)
-
-Why I'm emphazing this is that this change is relatively new (Nextflow 26.04 was released in April of 2026). So when want to use a community pipeline, you always have to check which nextflow version you're using and does the pipeline you're using abide to strict syntax parser.
-
-If not, your options are:
-1) Downgrade your nextflow version where syntax parser is v1 by default
-2) export NXF_SYNTAX_PARSER=v1 while it's still available as an option in Nextflow v26.04.XX
-
-# Alternative challenge
-
-Have folks split up and try to troubleshoot this issue with chatgpt, copilot, or seqera AI.
-
-
-# Next steps 
-
-If time permits, explore the Dockerfile and edit it to add the NXF_SYNTAX_pPARSER as an ENV variable
-
-
-
-Notes: 
-
-MAKE A BRANCH CHECKPOINT WITH THE fastq_dir_to_samplesheet.py SCRIPT
-
-https://docs.seqera.io/nextflow/strict-syntax
-
-ADDRESS USER NAME IN DOCKERFILE
-
-Change original script to original nf-core-demo_1.1.0 organization
-    nf-core-dmeo_1.1.0/1.1.0/and then all the directories here
-    Update analysis_script.sh and remove main.nf
