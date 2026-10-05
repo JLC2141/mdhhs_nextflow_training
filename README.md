@@ -1030,7 +1030,7 @@ And after:
 
 ![module import after](images/module_import_after.png)
 
-The original FASTQC import line was edit to:
+The original FASTQC import line was edited to:
 
 ```
 include { FASTQC as FASTQC_RAW} from '../modules/nf-core/fastqc/main'
@@ -1082,7 +1082,7 @@ Observe your results directory. Technically the pipeline ran and was "sucessful"
 
 <br>
 
-There is only one output for FASTQC, so the results from the raw reads must have been overriden by the trimmed reads after FASTQC was run again.
+There is only one output for FASTQC, so the results from the raw reads must have been overwritten by the trimmed reads after FASTQC was run again.
 
 ![FASTQC one result](images/fastqc_alias_output.png)
 
@@ -1094,7 +1094,7 @@ Recall the `modules.config` file:
 
 ![module config file](images/module_config.png)
 
-Specifically the section in the red box. This is a global publishDir directive. the `path` argument is essentially taking out `--outdir` parameter, which is `results` and organizing output subdirectories from each tool we use in the pipeline. The second part of the `path` arguments gathers the process name, `FASTQC`, converts it to lowercase, and makes it a subdirectory (`results/fastqc`).
+Specifically the section in the red box. This is a global publishDir directive. the `path` argument is essentially taking our `--outdir` parameter, which is `results` and organizing output subdirectories from each tool we use in the pipeline. The second part of the `path` arguments gathers the process name, `FASTQC`, converts it to lowercase, and makes it a subdirectory (`results/fastqc`).
 
 Because this is how we're specifying the output directory for `FASTQC`, the `FASTQC_RAW` module will run first and then output to `results/fastqc`. But then the `FASTQC_TRIMMED` module runs shortly after that and is also output to `results/fastqc`, which overwrites the results from the `FASTQC_RAW` module because the output files are the same. 
 
@@ -1103,7 +1103,7 @@ We need to specify publishDir for `FASTQC_RAW` and `FASTQC_TRIMMED` in our `modu
 ![module config edits](images/modules_config_edits.png)
 
 
-Add the following lines for `FASTQC_RAW`
+Replace the original `FASTQC` `withName` line to `FASTQC_RAW` and add the following lines:
 
 
 ```
@@ -1115,7 +1115,7 @@ Add the following lines for `FASTQC_RAW`
     }
 ```
 
-and the following lines for `FASTQC_TRIMMED`:
+and add a new `withName` line for `FASTQC_TRIMMED` and add the the following lines:
 
 ```
 withName: FASTQC_TRIMMED {
