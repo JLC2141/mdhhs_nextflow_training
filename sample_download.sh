@@ -2,15 +2,15 @@
 
 #Download FASTQ files of interest
 
-#Example pathogen from: https://www.ncbi.nlm.nih.gov/pathogens/pathogens_help/ SAMN05245394
-fasterq-dump SRR39817210
+#Example pathogen from: https://www.ncbi.nlm.nih.gov/sra?LinkName=biosample_sra&from_uid=61933769 SRR39817210
+fasterq-dump SRR3747659
 
 #gzip files
 gzip *.fastq
 
 #Rename files
-mv SRR39817210_1.fastq.gz SRR39817210_R1_001.fastq.gz
-mv SRR39817210_2.fastq.gz SRR39817210_R2_001.fastq.gz
+mv SRR3747659_1.fastq.gz SRR3747659_R1_001.fastq.gz
+mv SRR3747659_2.fastq.gz SRR3747659_R2_001.fastq.gz
 
 #move files to reads directory
 mkdir reads

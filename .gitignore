@@ -1,4 +1,6 @@
 reads/
 .nextflow*
 results/
+null/
 work/
+samplesheet.csv
