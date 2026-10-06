@@ -69,7 +69,7 @@ The webpage will reload. Confirm that the `tutorial_2` branch is loaded. Select 
 > This is a checkpoint from tutorial 1. Nextflow, nf-core, and SRATools are already installed for you <br>
 > The samplesheet creation script, fastq_dir_to_samplesheet.py, is also present <br>
 > As well as two bash scripts, sample_download.sh and run_nextflow_analysis.sh <br>
-> For streamlining FASTQ download and pipeline invocation, respectively.  
+> For streamlining FASTQ file download and pipeline invocation, respectively.  
 
 
 ### Create your first pipeline
@@ -125,7 +125,7 @@ This was easily fixed by removing the underscores. But, this was a nice introduc
 <br>
 
 > [!NOTE] <br>
-> When you use the nf-core CLI, it will tell you when we are not abiding to nf-core principles (as seen in the error, above) <br> 
+> When you use the nf-core CLI, it will tell you when you are not abiding to nf-core principles (as seen in the error, above) <br> 
 > But, we will not be creating an nf-core compliant nextflow pipeline for this nextflow training. <br>
 > However, the nf-core CLI is an invaluable resource, and will be used in this tutorial when building our nextflow pipeline. <br>
 > I also recommend it for all your future endeavors when building nextflow pipelines. <br>
@@ -212,7 +212,7 @@ It appears that this tool was already installed by default when we created our p
 
 <br>
 
-We can confirm that on our file explorer panel by revealing the contents of our `modules/` directory. Here, we see that FASTQ and MultiQC (we'll visit this in tutorial 6) are installed in a subdirectory called `nf-core/`. 
+We can confirm that on our file explorer panel by revealing the contents of our `modules/` directory. Here, we see that FASTQC and MultiQC (we'll visit this in tutorial 6) are installed in a subdirectory called `nf-core/`. 
 
 </details>
 
@@ -259,7 +259,7 @@ The fastp main.nf file will open on the top panel. Let's stop here for a second 
 > [!NOTE] <br>
 > You will notice that the individual modules (and as you'll see, the subworkflows) also have a `main.nf` file <br>
 > But the `main.nf` file within your project directory (`nf-core-myfirstpipeline/main.nf`) is the "main" `main.nf` <br>
-> This is the result of a Domain Specific Language (DSL) [migration](https://docs.seqera.io/nextflow/migrations/dsl1) from DSL1 to DSL2 <br>
+> This is the result of a nextflow's Domain Specific Language (DSL) [migration](https://docs.seqera.io/nextflow/migrations/dsl1) from DSL1 to DSL2 <br>
 > In DSL1, your whole workflow would be one longgggggg `main.nf` file. But now, in DSL2, the organization is briefly summarized as:
 
 <br>
@@ -298,7 +298,7 @@ There's a lot to take in here. But let's break down each component for simplicit
 - For example, say you had 3 samples and they are all processed through FASTP. The tag makes sure that each unique sample ID is associated with its read pair, both when used as input into the FASTP module and when output as trimmed reads. 
 
 3) Refers to the computational specifications (CPUs, memory, and max time) stored in `conf/base.config`
-4) Declaration of our container for our process. Nextflow supports various [containers](https://docs.seqera.io/nextflow/container) but you will typically only see docker or apptainer (formerly known as singularity). Containers are pre-packaged software containing all of the dependencies and installations need to run your tool (in this case FASTP). This enhances modularization because each process can contain a unique container that is only used when called upon in a workflow. We will cover this in more detail in tutorial 3. 
+4) Declaration of our container for our process. Nextflow supports various [containers](https://docs.seqera.io/nextflow/container) but you will typically only see docker or apptainer (formerly known as singularity). Containers are pre-packaged software containing all of the dependencies and installations needed to run your tool (in this case FASTP). This enhances modularization because each process can contain a unique container that is only used when called upon in a workflow. We will cover this in more detail in tutorial 3. 
 
 <br>
 
@@ -311,11 +311,11 @@ There's a lot to take in here. But let's break down each component for simplicit
 
 These first 4 components are examples of process [directives](https://docs.seqera.io/nextflow/process#directives), or put simply, optional settings for a process, though I would argue that the `meta.id` tag is becoming pretty standard (not optional) in nextflow pipelines.
 
-5) Inputs to the process. These should match the input descriptions on the nf-core [documentation](https://nf-co.re/modules/fastp/#input). 
+5) Inputs to the process. These should match the input descriptions on the nf-core [documentation](https://nf-co.re/modules/fastp/#input) for FASTP. 
 - Inputs take a qualifier, followed by a name. Various qualifiers can be viewed, [here](https://docs.seqera.io/nextflow/process#inputs). For FASTP, we see a val, path, and tuple qualifiers. <br>
 - The [val](https://docs.seqera.io/nextflow/process#input-variables-val), or value, qualifier accept any data type but it's best to refer to the documentation of the tool to see what type of value it expects. <br>
 - The [path](https://docs.seqera.io/nextflow/process#input-files-path) qualifier requires the path to input files. <br>
-- The [tuple](https://docs.seqera.io/nextflow/process#input-tuples-tuple) groups various qualifiers together, and in this case, uniquely ties the val of our `meta.id` tag (aka sample name) to the path of our `reads` <br>
+- The [tuple](https://docs.seqera.io/nextflow/process#input-tuples-tuple) groups various qualifiers together, and in this case, uniquely ties the val of our `meta.id` tag (aka sample ID) to the path of our `reads` <br>
         - and to the path of an adapter file (but we'll remove this `path(adapter_fasta)` qualifier as we begin to edit this module)
 6) Outputs of the process. Again, these should match the nf-core documentation of FASTP [outputs](https://nf-co.re/modules/fastp/#output). These also take qualifiers. Just focus on the first line.
 - Here, we are creating a tuple output to link our `meta.id` (aka sample ID) to the path of our `trimmed_reads`. 
@@ -330,14 +330,14 @@ Let's keep scrolling through our FASTP module `main.nf` file and view a second s
 
 7) [when](https://docs.seqera.io/nextflow/process#when) is a conditional logic statement to run the process (or not). <br>
 - To be honest, I don't use this at all. And by default, the statement currently sets `null==true`, meaning this process is set to run by default unless you explicitly state a condition in which this process should (or should not) run
-8) The [script](https://docs.seqera.io/nextflow/process#script) section. The script itself is interpreted as Bash script by default. We start with definition (def) arguments which are unique to script itself. For example, in this example:
+8) The [script](https://docs.seqera.io/nextflow/process#script) section. The script itself is interpreted as Bash script by default. We start with definition (def) arguments which are unique to the script itself. For example, in this example:
 
 ```
 def prefix = task.ext.prefix ?: "${meta.id}"
 ```
 
-- It's saying, if a `ext.prefix` is defined somewhere (as we'll learn, that "somewhere" is typically within the `conf/modules.config` file), then the `prefix` argument is assigned that string <br>
-- Otherwise, `prefix` is assigned to the `meta.id` tag (aka the sample ID). In other words, `meta.id` is assigned to `prefix` if `ext.prefix` is null. See [Elvis operator](https://zetcode.com/groovy/conditionals/)
+- It's saying, `if` a `ext.prefix` is defined somewhere (as we'll learn, that "somewhere" is typically within the `conf/modules.config` file), then the `prefix` argument is assigned that string <br>
+- `else`, `prefix` is assigned to the `meta.id` tag (aka the sample ID). In other words, `meta.id` is assigned to `prefix` if `ext.prefix` is null. See [Elvis operator](https://zetcode.com/groovy/conditionals/)
 
 <br>
 
@@ -347,48 +347,48 @@ def prefix = task.ext.prefix ?: "${meta.id}"
 ```
 def args = task.ext.args ?: ''
 ```
-if `ext.args` is present (which, as you'll see, is also declared in `conf/modules.config`) use it, else it's blank
+`if` `ext.args` is present (which, as you'll see, is also declared in `conf/modules.config`) use it, `else` it's blank
 
 <br>
 
 ```
 def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
 ```
-if the `--adapter_fasta` input parameter is present, define is as `adapter_fasta`, else it's blank
+`if` the `--adapter_fasta` input parameter is present, define is as `adapter_fasta`, `else` it's blank
 
 <br>
 
 ```
 def fail_fastq = save_trimmed_fail && meta.single_end ? "--failed_out ${prefix}.fail.fastq.gz" : save_trimmed_fail && !meta.single_end ? "--failed_out ${prefix}.paired.fail.fastq.gz --unpaired1 ${prefix}_R1.fail.fastq.gz --unpaired2 ${prefix}_R2.fail.fastq.gz" : ''
 ```
-if the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is from single end reads, then create the parameter `--failed_out ${prefix}.fail.fastq.gz` parameter/output, <br>
-else if the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is *not* (`!` character in `!meta.single_end`) from single end reads, <br>
+`if` the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is from single end reads, then create the parameter `--failed_out ${prefix}.fail.fastq.gz` parameter/output, <br>
+`else if` the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is *not* (`!` character in `!meta.single_end`) from single end reads, <br>
 then output (`--failed_out`) failed paired reads as `${prefix}.paired.fail.fastq.gz`, output (`--unpaired1`) failed unpaired forward reads as `${prefix}_R1.fail.fastq.gz`, and output (`--unpaired2`) failed unpaired reverse reads as `${prefix}_R2.fail.fastq.gz"`,  <br>
-otherwise, the `fail_fastq` argument is blank
+`else`, the `fail_fastq` argument is blank
 
 <br>
 
 ```
 def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fastp.fastq.gz" : "--out1 ${prefix}_R1.fastp.fastq.gz" )
 ```
-if `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br> 
-else if `false` AND if the `meta.id` tag is from single end reads, the create the `--out1 ${prefix}.fastp.fastq.gz` parameter/output, <br>
-else create the `--out1 ${prefix}_R1.fastp.fastq.gz` parameter/output
+`if` `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br> 
+`else if` `false` AND if the `meta.id` tag is from single end reads, the create the `--out1 ${prefix}.fastp.fastq.gz` parameter/output, <br>
+`else` create the `--out1 ${prefix}_R1.fastp.fastq.gz` parameter/output
 
 <br>
 
 ```
 def out_fq2 = discard_trimmed_pass ?: "--out2 ${prefix}_R2.fastp.fastq.gz"
 ```
-if `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br>
-else if `false` and the `meta.id` tag is from single end reads, the create the `--out2 ${prefix}.fastp.fastq.gz` parameter/output, <br> 
-else create the `--out2 ${prefix}_R1.fastp.fastq.gz` parameter/output
+`if` `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br>
+`else if` `false` and the `meta.id` tag is from single end reads, the create the `--out2 ${prefix}.fastp.fastq.gz` parameter/output, <br> 
+`else` create the `--out2 ${prefix}_R1.fastp.fastq.gz` parameter/output
 
 </details>
 
 <br>
 
-Following `def` arguments, in it's simplest form, are three, double quote characters. It's more like a """quote character sandwich""" encapsulating the bash script. For example: 
+Following `def` arguments within the `script:` block, in it's simplest form, are three, double quote characters. It's more like a """quote character sandwich""" encapsulating the bash script. For example: 
 
 <br>
 
@@ -474,7 +474,7 @@ The big tell is that this last script accepts paired reads, as shown by the `--i
 <br>
 
 > [!NOTE] <br>
-> `inputs`/`directives` transformed to definition arguments, defined prior to the script block, are accessed within the bash script via nextflow's dollar sign (`$`) variable <br>
+> `inputs`/`directives` transformed to definition arguments, defined prior to the script block, are accessed within `script:` block via nextflow's dollar sign (`$`) variable <br>
 
 For example `$prefix` was defined from the `def prefix = task.ext.prefix ?: "${meta.id}"`, which, `$prefix` in this case is assigned the `meta.id` that was a directive defined at the beginning of this process code, `tag "$meta.id"`. 
 
@@ -514,7 +514,7 @@ process EXAMPLE {
 }
 ```
 
-`reads` is a nextflow variable since it was defined in the input section and `Test` is a bash variable since it is only defined within script block. 
+`reads` is a nextflow variable since it was defined in the input section and `Test` is a bash variable since it is only defined within the `script:` block. 
 
 </details>
 
@@ -528,14 +528,14 @@ The last part of the FASTP process is the [stub](https://docs.seqera.io/nextflow
 
 <br>
 
-This is supposed to be a way to test the functionality and workflow logic of your pipeline without taking up a lot of time and/or space running the real commands, as in the real fastp tool defined in the bash script, above. We're not going to cover stub in this tutorial because I don't make much use of it. And, I think you should always test the true script out to ensure proper functionality. 
+This is supposed to be a way to test the functionality and workflow logic of your pipeline without taking up a lot of time and/or space running the real commands, as in the real fastp tool defined in the `script:` block, above. We're not going to cover stub in this tutorial because I don't make much use of it. And, I think you should always test the true script out to ensure proper functionality. 
 
 <br>
 
 > [!NOTE] <br>
 > Everything provided within this FASTP process is just default from the nf-core community. <br>
 > As you'll soon see, we can edit the process to add/remove items. <br>
-> nf-core CLI commands provide the template foundation, you edit as you please. 
+> nf-core CLI commands provide the template foundation, you can edit as you please. 
 
 <br>
 
@@ -582,7 +582,7 @@ Here is snapshot of the beginning of the fastp main.nf file, prior to edits:
 > The indentation is for aesthetic purposes only. It is not required as part of Nextflow syntax. <br>
 > However, it does make it more human-readable. I do suggest adopting indentation practices as already shown in the template files. <br>
 
-Okay, moving the down to the script section within the FASTP process. Let's look at a snapshot of the script, before edits:
+Okay, moving down to the script section within the FASTP process. Let's look at a snapshot of the script, before edits:
 
 ![FASTP module before part II](images/fastp_module_before_2.png)
 
@@ -671,8 +671,8 @@ This is a global configuration setting for all modules part of your pipeline.
 
 - This `publishDir` directive is a way to specify output files from a pipeline. 
     - The first `path` line is organizing the output directory (defined by the `--outdir` parameter) with subdirectories created and named by each bioinformatics tool used in the pipeline, with the name converted to lowercase.
-    - The second `mode` line defines how the results are taken from the `work/` directory and placed into your output directory. The most common setting for this is typically `copy`, meaning results will be copied from the `work` directory to your output directory. You can confirm this by finding this parameter with the global `nextflow.config` file (see image, below). 
-    - The `saveAs` line controls whether a file is published to the output directory and can handle renaming. Here, this line is basically saying, "if we detect a file called versions.yml, do not publish it, otherwise publish all other output files to the output directory".  
+    - The second `mode` line defines how the results are taken from the `work/` directory and placed into your output directory. The most common setting for this is typically `copy`, meaning results will be copied from the `work` directory to your output directory. You can confirm this by finding this parameter within the global `nextflow.config` file (see image, below). 
+    - The `saveAs` line controls whether a file is published to the output directory and can handle renaming. Here, this line is basically saying, "`if` we detect a file called versions.yml, do not publish it, `else` publish all other output files to the output directory".  
 
 
 ![Publish dir mode](images/publish_dir.png)
@@ -751,7 +751,7 @@ Let's focus on the inputs, first. We need the same number of inputs as declared 
 
 - The expected input parameters for FASTP as defined by the nf-core community can be viewed [here](https://nf-co.re/modules/fastp/#input), and are discussed here, as well:
     - The first input expected was a tuple containing 3 qualifiers (the meta tag, the reads, and the adapter_fasta)
-        - However, we edited the script to remove the adapter_fasta file so it now only expects a tuple with 2 qualifiers, so we can just keep it as the samplesheet
+        - However, we edited the script to remove the adapter_fasta file so it now only expects a tuple with 2 qualifiers, so we can just keep it as the `ch_samplesheet`
     - The second input is a boolean (true/false) declaration on whether we want to discard the trimmed reads (or not)
     - The third input is a boolean (true/false) declaration on whether we want to save reads that failed the trimmming thresholds
     - The fourth input is a boolean (true/false) declaration on whether we want to merge trimmed reads
@@ -763,7 +763,7 @@ Let's focus on the inputs, first. We need the same number of inputs as declared 
 > Here, I used it to make a label describing the use of the FASTP module for read trimming. <br>
 
 
-All we really care about is the trimmed reads so I input false for all of these (plus, they take up extra storage)
+All we really care about is the trimmed reads so I input `false` for all of these (plus, saving failed reads takes up extra storage)
 
 Next, we need to specify the new channel containing our trimmed reads. Nextlow channel outputs from modules/subworkflows take the form of:
 
@@ -792,7 +792,7 @@ Edit the `conf/base.config` file so that the `process_low` label has `2` CPUs an
 
 ![Compute edits](images/edit_compute.png)
 
-Again, this is a limitation to of GitHub codespace, in terms of computing power, so we need to make sure we stay within the computational bounds of our virtual machine. 
+Again, this is a limitation of GitHub codespaces, in terms of computing power, so we need to make sure we stay within the computational bounds of our virtual machine. 
 
 This `process_low` directive it what we edited in the `modules/nf-core/fastp/main.nf` file from `process_medium` to `process_low` and refers to these newly set computational limits.
 
@@ -900,7 +900,7 @@ cat .command.sh
 ![FASTP script](images/fastp_script.png)
 
 - As we can see:
-    - It was the third script block run from the FASTP module, as we determined prior (refer to the "Exibit C" image)
+    - It was the third script block run from the FASTP module, as we determined prior (refer to the "Exhibit C" image, above)
     - Inputs and outputs match what is in the FASTP process script (`modules/nf-core/fastp/main.nf`)
     - Our FASTP paramaters were added from the `modules.config` file via `ext.args`
 
@@ -1004,7 +1004,7 @@ FASTQC(ch_trimmed_reads)
 
 ![FASTQC module repeat](images/add_fastqc_mod.png)
 
-Notice this is slightly different from the first FASTQC module call. In the first FASTQC module, the input was `ch_samplesheet`. In this next run of FASTQ, we want to analyze our trimmed reads, so we use the channel output from the FASTP module, FASTP.out.trimmed_reads, that we renamed to `ch_trimmed_reads`.
+Notice this is slightly different from the first FASTQC module call. In the first FASTQC module, the input was `ch_samplesheet`. In this next implementation of FASTQC, we want to analyze our trimmed reads, so we use the channel output from the FASTP module, FASTP.out.trimmed_reads, that we renamed to `ch_trimmed_reads`.
 
 
 Okay, so let's rerun our nextflow analysis:
@@ -1012,6 +1012,8 @@ Okay, so let's rerun our nextflow analysis:
 ```
 bash run_nextflow_pipeline.sh
 ```
+
+**If you started from the `tutorial_2_challenge` branch you will first need to download your samples again and prepare the `samplesheet.csv` file. Refer to the section, `Part III: Testing the pipeline`, if you need a refresher.** 
 
 Ooo nooooo... we ran into an error:
 
@@ -1049,12 +1051,12 @@ The `FASTQC as FASTQ_module_alias` is the key part to successfully create a modu
 
 - Here, we:
     - Changed the original `FASTQC` module call to `FASTQC_RAW` with input channel `ch_samplesheet`
-        - We also needed to change the FASTQ in `ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })` to `ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })`
+        - We also needed to change the `FASTQC` in `ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })` to `ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })`
         - We will learn about this more in tutorial 6 when we learn MultiQC but for now, just make the change so that the pipeline runs. 
     - Added the `FASTQC_TRIMMED` module with input channel `ch_trimmed_reads`
     - Hashed out the line we had to view the `ch_samplesheet`
         - And added a line below  `ch_trimmed_reads` = FASTP.out.trimmed_reads to view the `ch_trimmed_reads` channel
-    - Added descriptors to the FASTQ modules
+    - Added descriptors to the FASTQC modules
 
 
 Save the file 
@@ -1073,7 +1075,7 @@ Okay cool! It looks like the pipeline succeeded:
 
 ![Module alias run](images/module_alias_run.png)
 
-Observe your results directory. Technically the pipeline ran and was "sucessful", but is everything as expected? Check out your results? What do you notice is wrong?
+Observe your results directory. Technically the pipeline ran and was "successful", but is everything as expected? Check out your results? What do you notice is wrong?
 
 <br>
 
@@ -1089,6 +1091,7 @@ There is only one output for FASTQC, so the results from the raw reads must have
 
 </details>
 
+<br>
 
 Recall the `modules.config` file:
 
@@ -1098,7 +1101,7 @@ Specifically the section in the red box. This is a global publishDir directive. 
 
 Because this is how we're specifying the output directory for `FASTQC`, the `FASTQC_RAW` module will run first and then output to `results/fastqc`. But then the `FASTQC_TRIMMED` module runs shortly after that and is also output to `results/fastqc`, which overwrites the results from the `FASTQC_RAW` module because the output files are the same. 
 
-We need to specify publishDir for `FASTQC_RAW` and `FASTQC_TRIMMED` in our `modules.config` file to override the process-wide configuration set at the beginning of this file. Make the following edits to the `modules.config` file:
+We need to specify publishDir path arguments for `FASTQC_RAW` and `FASTQC_TRIMMED` in our `modules.config` file to override the process-wide configuration set at the beginning of this file. Make the following edits to the `modules.config` file:
 
 ![module config edits](images/modules_config_edits.png)
 
@@ -1154,6 +1157,49 @@ And we see two separate directories, `fastqc_raw` and `fastqc_trimmed`, for the 
 > This is because we're outputting results to the same `results/` directory with each nextflow pipeline run. <br>
 > If you were to delete the `results/` directory and rerun the pipeine, you then only see `fastqc_raw` and `fastqc_trimmed` <br>
 > Directories for FASTP within the `results/` directory. There would be no `fastqc` directory. <br>
+
+<br>
+
+Feel free to explore and compare the FASTQC outputs between the raw and trimmed reads to ensure that trimming improved read quality. 
+
+And remember when we added the `view.()` operator to look at the contents of our trimmed_reads channel?
+
+```
+ch_trimmed_reads.view()
+```
+
+Did you catch it this time? Right after the `FASTP` module completed, you might have noticed this output:
+
+![ch_trimmed_reads](images/ch_trimmed_reads.png)
+
+As opposed to when we ran `ch_samplsheet.view()`, which output:
+
+```
+[[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/reads/SRR39817210_R1_001.fastq.gz, /workspaces/mdhhs_nextflow_training/reads/SRR39817210_R2_001.fastq.gz]]
+```
+
+We now see the following with `ch_trimmed_reads.view()`:
+
+```
+[[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/work/1a/4dac362a18b66c399bea9656667a7b/SRR39817210_R1.fastp.fastq.gz, /workspaces/mdhhs_nextflow_training/work/1a/4dac362a18b66c399bea9656667a7b/SRR39817210_R2.fastp.fastq.gz]]
+```
+
+The `.fastp.` within the FASTQ file name indicates that this tuple channel now links to our FASTP-trimmed reads. But, if you really wanted to convince yourself, navigate to the work directory indicated from the `ch_trimmed_reads.view()` output and run the:
+
+```
+ll
+``` 
+
+command and look at the contents of `.command.sh`: 
+
+```
+cat .command.sh
+```
+
+to show that this was indeed the FASTQ file output from FASTP trimming.
+
+**Your `work/` directory hash to the FASTP process will be different**
+
 
 
 Nice job! You completed the challenge of adding a module alias. This is also very useful if you want to run the same tool twice but want different tool parameters. You would just add different `ext.args` to each module alias within the `modules.config file`.  
