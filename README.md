@@ -1,6 +1,5 @@
 # Table of contents
 - [Overview](#-overview)
-- [Tutorial 1](#-tutorial-1)
 - [Part I](#part-i-launching-github-codespace)
 - [Part II](#part-ii-obtaining-a-pipeline-from-nf-core-command-line-interface-cli-and-preparing-a-run)
 - [Part III](#part-iii-obtaining-a-cdc-pipeline-from-github-and-performing-a-test-run)
@@ -20,9 +19,6 @@ Learning objectives:
 * Download and launch a CDC-available nextflow pipeline 
 * Experience and troubleshoot nextflow errors
 * Understand a recent and significant change made in Nextflow v26.04
-
-
-# 📖 Tutorial 1
 
 
 # Part I: Launching GitHub Codespace
