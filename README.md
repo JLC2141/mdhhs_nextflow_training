@@ -66,7 +66,7 @@ How many CPUs? How much memory will our VM contain?
 2 CPU cores
 8 GB of RAM
 
-We will need to make use of this information later in this tutorial so keep that this information in mind!
+We will need to make use of this information later in this tutorial so keep this information in mind!
 </details>
 
 <br>
@@ -89,7 +89,7 @@ If you do not see the terminal, press `F1`. You'll be prompted on the search bar
 
 <br>
 
-> [!NOTE] <br>
+> [!Note]
 > The greater-than symbol, `>`, is needed in order to switch from file search mode to command palette mode.
 
 <br>
@@ -236,7 +236,7 @@ Explore the file/directory structure:
     - `main.nf`: required in order for the nextflow run command to function <br>
     - `nextflow.config`: global pipeline configuration properties <br>
     - `conf`: module-specific parameterization and computational configs <br>
-    - `modules`: bioinformatic tools installed here <br>
+    - `modules`: the process scripts for bioinformatic tools are installed here <br>
     - `subworkflows`: collection of modules into a "mini workflow" <br>
     - `workflows`: a script (per workflow) containing all modules/subworkflows in your pipeline <br>
     - `assets`: storage of reference files and databases <br>
@@ -249,7 +249,7 @@ This `nf-core pipelines download` command works for any available pipeline on th
 
 Great! That was step 1. Step 2, we need to obtain our sample of interest. Download our tutorial dataset using the [SRA Toolkit](https://github.com/ncbi/sra-tools/wiki/HowTo:-fasterq-dump):
 
-> [!NOTE] <br>
+> [!Note]
 > Like nf-core, SRA Toolkit also has built in CLI commands.
 > And that's what we're using here to retrieve FASTQ files.
 
@@ -257,7 +257,7 @@ Great! That was step 1. Step 2, we need to obtain our sample of interest. Downlo
 fasterq-dump SRR3747659
 ```
 
-> [!NOTE] <br>
+> [!Note]
 > fasterq-dump is a more up-to-date command compared to fastq-dump, but in contrast to fastq-dump, 
 > fasterq-dump does not have a built in --gzip/pigz option. So we need to perform this ourselves.
 
@@ -297,7 +297,7 @@ And then look at the help information for the python script:
 python3 fastq_dir_to_samplesheet.py -h
 ```
 
-> [!NOTE] <br>
+> [!Note]
 > Python3 was installed in this codespace we're currently using so we use the `python3` prompt instead of `python` to invoke the script
 
 <br>
@@ -406,7 +406,7 @@ This command should have just successfully launched the nextflow pipeline. *At t
 
 <br>
 
-> [!NOTE] <br>
+> [!Note]
 > The profile option has 1 dash while the input and outdir parameters have 2 dashes. <br>
 > Nextflow core options contain 1 dash. This affects the behavior of nextflow itself. <br>
 > Pipeline parameters, that affect a single workflow, is specified with 2 dashes. <br>
@@ -453,10 +453,10 @@ ls results/
 
 It will be populated with our results:
 
-1) fastqc - results from read QC assessment
-2) fq - the SEQTK trimmed FASTQ files
-3) multiqc - collection of results from individual tools into a report
-4) pipeline_info - a directory containing various reports and files including:
+1) `fastqc` - results from read QC assessment
+2) `fq` - the SEQTK trimmed FASTQ files
+3) `multiqc` - collection of results from individual tools into a report
+4) `pipeline_info` - a directory containing various reports and files including:
     - [execution report](https://docs.seqera.io/nextflow/reports#execution-report): pipeline run information
     - [execution timeline](https://docs.seqera.io/nextflow/reports#execution-timeline): timelines of tasks in pipeline
     - [trace file](https://docs.seqera.io/nextflow/reports#trace-file): detailed task metrics
@@ -469,14 +469,14 @@ It will be populated with our results:
 
 <br>
 
-Go ahead and download the multiqc report:
+Go ahead and download the MultiQC report:
 
 ![MultiQC](images/multi_qc.png)
 
-> [!NOTE] <br>
+> [!Note]
 > When you right-click the file, you may need to toggle through the menus with the `Esc` key in order to see the "Download" option. 
 
-Open the HTML file explore this file for a bit. We see that we have a report of the FASTQC results from our two FASTQ files. This is only a demo pipeline but more complex pipelines have larger multiQC reports providing summary results from tools used during the analysis. 
+Open the HTML file explore this file for a bit. We see that we have a report of the FASTQC results from our two FASTQ files. This is only a demo pipeline but more complex pipelines have larger MultiQC reports providing summary results from supported tools used during the analysis. All supported tools that can be incorporated into a MultiQC report can be viewed [here](https://docs.seqera.io/multiqc/modules/).
 
 **The [MultiQC](https://seqera.io/multiqc/) report is an aggregate of bioinformatic analyses results**
 
@@ -491,7 +491,7 @@ Re-run the nf-core-demo pipeline with the addition of the `-resume` flag:
 nextflow run nf-core-demo_1.1.0/1_1_0/main.nf -profile docker --input samplesheet.csv --outdir results -resume
 ```
 
-> [!NOTE] <br>
+> [!Note]
 > `resume` is a nextflow core option <br>
 > Remember: 1 dash because it's a core option, not a parameter that we're changing in the pipeline
 
@@ -509,7 +509,7 @@ This nextflow [resume feature](https://docs.seqera.io/nextflow/cache-and-resume)
 
 <br>
 
-> [!NOTE]
+> [!Note]
 > Recall when we first launched our pipeline that the `launchDir` was specified as `/workspaces/mdhhs_nextflow_training`.
 
 <br>
@@ -674,7 +674,7 @@ ls Mira-nf
 ![mira clone](images/mira_clone.png)
 
 
-You might notice that some of these files and directories in this pipeline look similar to the nf-core-demo pipeline. We'll learn more about these files and directories as we begin to build out our own pipeline in the following tutorials. 
+You might notice that some of these files and directories in this pipeline look similar to the nf-core-demo pipeline. That's because nextflow expects and has standard files/directories for built-in functionality.
 
 For now, enter the following command to run a built-in test of the pipeline:
 
@@ -689,7 +689,7 @@ nextflow run Mira-nf/main.nf \
 
 <br>
 
-> [!NOTE] <br>
+> [!Note]
 > We did not go through and make the sample sheet and obtain FASTQ files (as we did in Part II) because Mira has a built-in test. <br>
 > But, do you notice the same main components as mentioned before? <br>
 > We see the `nextflow run` command, the path to the `main.nf` file, the `profile` core option, and `input` and `output` parameters <br>
