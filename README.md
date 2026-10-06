@@ -157,7 +157,7 @@ And the following directories:
     - `modules.config`: defining bioinformatic tool parameters and output format
 5) **workflows/**: location of individual files for pipelines. This is where we'll build our workflow through the combination of `modules`, `channels`, and `operators`. Workflows contained here are executed from the main.nf file (`nf-core-myfirstpipeline/main.nf`)
     - Can contain multiple pipelines (`name_of_pipeline.nf`) within the `workflows` directory
-6) **modules/**: where individual bioinformatics tools and/or processes of a pipeline are stored. Organized into `modules/nf-core/` and `modules/local/` directories depending if the module is sourced from nf-core (as seen here in Tutorial 2 and 4) or manually created (as we'll encounter in Tutorial 3), respectively. 
+6) **modules/**: where the process scripts for individual bioinformatics tools are stored. Organized into `modules/nf-core/` and `modules/local/` directories depending if the module is sourced from nf-core (as seen here in Tutorial 2 and 4) or manually created (as we'll encounter in Tutorial 3), respectively. 
     - **NOTE**: you'll notice that `modules` and `process` seem to get used interchangeably
     - Generally speaking, a `module` is a complete, sharable unit of modular code
     - a `module` encapsulates a single `process` definition, which provides all the components to execute a block of code (inputs, outputs, and script block)
