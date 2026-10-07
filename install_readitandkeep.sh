@@ -20,3 +20,14 @@ mv read-it-and-keep ../../
 
 #Add this path to an environment variable so it's easier to call the program from anywhere
 export PATH=$PATH:/workspaces/mdhhs_nextflow_training/scrubber_test
+
+# change back to the scrubber_test directory
+cd /workspaces/mdhhs_nextflow_training/scrubber_test
+
+#download reference files for testing
+wget https://github.com/phac-nml/measeq/blob/main/assets/reference/A/FJ211590.fasta
+wget https://github.com/phac-nml/measeq/blob/main/assets/reference/B3/MK513622.1.reference.fasta
+wget https://github.com/phac-nml/measeq/blob/main/assets/reference/D8/MH356245.1.reference.fasta
+
+#Copy the fastq files from the misc directory to the current directory
+cp ../misc/*.fastq.gz .
