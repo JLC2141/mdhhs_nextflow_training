@@ -3,14 +3,15 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC as FASTQC_RAW} from '../modules/nf-core/fastqc/main'
-include { FASTP                  } from '../modules/nf-core/fastp/main'
-include { FASTQC as FASTQC_TRIMMED} from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_myfirstpipeline_pipeline'
+include { FASTQC as FASTQC_RAW       } from '../modules/nf-core/fastqc/main'
+include { READITANDKEEP              } from '../modules/local/readitandkeep/main'
+include { FASTP                      } from '../modules/nf-core/fastp/main'
+include { FASTQC as FASTQC_TRIMMED   } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap           } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML     } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText     } from '../subworkflows/local/utils_nfcore_myfirstpipeline_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,7 +29,10 @@ workflow MYFIRSTPIPELINE {
     outdir
 
     main:
-
+    //Check for the existence of a reference file and create a channel
+    def ch_reference = channel.fromPath(params.reference, checkIfExists: true)
+    ch_reference.view()
+    
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
     //
@@ -37,6 +41,11 @@ workflow MYFIRSTPIPELINE {
     //ch_samplesheet.view()
     FASTQC_RAW(ch_samplesheet)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })
+
+    READITANDKEEP(
+        ch_samplesheet,
+        ch_reference
+    )
 
     //
     // MODULE: Run FASTP read trimming
