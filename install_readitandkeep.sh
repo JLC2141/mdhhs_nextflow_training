@@ -16,13 +16,14 @@ cd read-it-and-keep
 cd src && make
 
 #move executable to the scrubber_test directory
-mv readItAndKeep ../../
+mkdir -p $HOME/.local/bin
+mv readItAndKeep $HOME/.local/bin
 
 # change back to the scrubber_test directory
 cd ../../
 
 #Add this path to an environment variable so it's easier to call the program from anywhere
-export PATH="$PATH:/workspaces/mdhhs_nextflow_training/scrubber_test"
+export PATH="$PATH:$HOME/.local/bin"
 
 #download reference files for testing
 wget https://github.com/phac-nml/measeq/blob/main/assets/reference/A/FJ211590.fasta
@@ -31,3 +32,6 @@ wget https://github.com/phac-nml/measeq/blob/main/assets/reference/D8/MH356245.1
 
 #Copy the fastq files from the misc directory to the current directory
 cp ../misc/*.fastq.gz .
+
+#Remove the read-it-and-keep directory
+rm -rf read-it-and-keep/
