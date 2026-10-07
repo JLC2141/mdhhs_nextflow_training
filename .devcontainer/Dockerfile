@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     pigz \
     unzip \
+    zlib1g-dev \
     perl \
     default-jre \
     ca-certificates \
