@@ -26,9 +26,9 @@ cd ../../
 export PATH="$PATH:$HOME/.local/bin"
 
 #download reference files for testing
-wget https://github.com/phac-nml/measeq/blob/main/assets/reference/A/FJ211590.fasta
-wget https://github.com/phac-nml/measeq/blob/main/assets/reference/B3/MK513622.1.reference.fasta
-wget https://github.com/phac-nml/measeq/blob/main/assets/reference/D8/MH356245.1.reference.fasta
+wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/A/FJ211590.fasta
+wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/B3/MK513622.1.reference.fasta
+wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/D8/MH356245.1.reference.fasta
 
 #Copy the fastq files from the misc directory to the current directory
 cp ../misc/*.fastq.gz .
