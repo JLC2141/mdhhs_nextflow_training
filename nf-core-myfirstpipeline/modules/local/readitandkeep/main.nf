@@ -13,7 +13,7 @@ process READITANDKEEP {
 
     output:
     tuple val(meta), path('*.fastq.gz')
-    tuple val(meta), path('*_scrubbed_results.txt')
+    path('*_scrubbed_results.txt')
     tuple val("${task.process}"), val('readitandkeep'), eval("readItAndKeep --version"), topic: versions, emit: versions_readitandkeep
 
     when:
@@ -25,8 +25,8 @@ process READITANDKEEP {
     """
     readItAndKeep \\
         --ref_fasta $reference \\
-        --reads1 ${prefix}_R1_001.fastq.gz \\
-        --reads2 ${prefix}_R2_001.fastq.gz \\
+        --reads1 ${reads[0]} \\
+        --reads2 ${reads[1]} \\
         --outprefix ${prefix} \\
         $args \\
         > ${prefix}_scrubbed_results.txt
