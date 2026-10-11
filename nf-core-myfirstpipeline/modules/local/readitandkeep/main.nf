@@ -19,8 +19,8 @@ process READITANDKEEP {
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.fastq.gz")
-    path "*_scrubbed_results.txt"
+    tuple val(meta), path('*.fastq.gz')
+    tuple val (meta), path('*_scrubbed_results.txt')
     tuple val("${task.process}"), val('readitandkeep'), eval("readItAndKeep --version"), topic: versions, emit: versions_readitandkeep
 
     when:
