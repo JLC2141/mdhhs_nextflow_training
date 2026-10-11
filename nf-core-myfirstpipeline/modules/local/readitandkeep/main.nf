@@ -6,7 +6,7 @@ process READITANDKEEP {
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/read-it-and-keep:0.3.0--h5ca1c30_3':
-        'ghcr.io/globalpathogenanalysisservice/read-it-and-keep:v0.3.0' }"
+        'quay.io/biocontainers/read-it-and-keep:0.3.0--h5ca1c30_3' }"
 
     input:// TODO nf-core: Where applicable all sample-specific information e.g. "id", "single_end", "read_group"
     //               MUST be provided as an input via a Groovy Map called "meta".
