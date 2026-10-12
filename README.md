@@ -286,16 +286,21 @@ There's a lot to take in here. But let's break down each component for simplicit
 
 1) The first line of this module defines the [process](https://docs.seqera.io/nextflow/process), and the process itself is uppercase as a result of [nf-core naming conventions](https://nf-co.re/docs/specifications/components/modules/naming-conventions#name-format-of-module-processes). We will stick to this naming convention because it will help distinguish pipeline components (modules vs channels vs operators) in our workflow.  
     - Think of the process as the actual code present in this file while the module is a reusable component for a nextflow workflow 
-2)  tag represents a custom identifier for each task execution of your process. The `$meta.id` is uniquely tied to the [meta map](https://nf-co.re/docs/developing/components/meta-map) created for our sample(s) contained in the samplesheet.csv. This takes the form of:
+2)  tag represents a custom identifier for each task execution of your process. The `$meta.id` is part of the [meta map](https://nf-co.re/docs/developing/components/meta-map) created for our sample(s) contained in the samplesheet.csv. We will elaborate more on this but briefly, the input samplesheet.csv gets transformed to a channel that takes the form of:
 
 ```
-[meta.id, [fastq_1, fastq_2]]
+meta  = [id: 'sample', single_end: false]
+reads = [
+    file('sample_R1_001.fastq.gz'),
+    file('sample_R2_001.fastq.gz')
+]
 ```
 
+So `meta.id` accesses the sample ID uniquely tied to the read pair files. 
 
-- **The `meta.id` tag is our unique sample identifier tied to our FASTQ reads that can be used in our process to link sample IDs to process inputs/outputs.**
+- **`meta.id` is sample identifier tied to our FASTQ reads and the tag directive labels the process task with the sample ID in Nextflow execution reports and logs.**
 
-- For example, say you had 3 samples and they are all processed through FASTP. The tag makes sure that each unique sample ID is associated with its read pair, both when used as input into the FASTP module and when output as trimmed reads. 
+- For example, say you had 3 samples and they are all processed through FASTP. The `meta` map makes sure that each unique sample ID is associated with its read pair, both when used as input into the FASTP module and when output as trimmed reads. 
 
 3) Refers to the computational specifications (CPUs, memory, and max time) stored in `conf/base.config`
 4) Declaration of our container for our process. Nextflow supports various [containers](https://docs.seqera.io/nextflow/container) but you will typically only see docker or apptainer (formerly known as singularity). Containers are pre-packaged software containing all of the dependencies and installations needed to run your tool (in this case FASTP). This enhances modularization because each process can contain a unique container that is only used when called upon in a workflow. We will cover this in more detail in tutorial 3. 
@@ -315,7 +320,7 @@ These first 4 components are examples of process [directives](https://docs.seqer
 - Inputs take a qualifier, followed by a name. Various qualifiers can be viewed, [here](https://docs.seqera.io/nextflow/process#inputs). For FASTP, we see a val, path, and tuple qualifiers. <br>
 - The [val](https://docs.seqera.io/nextflow/process#input-variables-val), or value, qualifier accept any data type but it's best to refer to the documentation of the tool to see what type of value it expects. <br>
 - The [path](https://docs.seqera.io/nextflow/process#input-files-path) qualifier requires the path to input files. <br>
-- The [tuple](https://docs.seqera.io/nextflow/process#input-tuples-tuple) groups various qualifiers together, and in this case, uniquely ties the val of our `meta.id` tag (aka sample ID) to the path of our `reads` <br>
+- The [tuple](https://docs.seqera.io/nextflow/process#input-tuples-tuple) groups various qualifiers together, and in this case, uniquely ties the val of our `meta` map (containing sample ID information) to the path of our `reads` <br>
         - and to the path of an adapter file (but we'll remove this `path(adapter_fasta)` qualifier as we begin to edit this module)
 6) Outputs of the process. Again, these should match the nf-core documentation of FASTP [outputs](https://nf-co.re/modules/fastp/#output). These also take qualifiers. Just focus on the first line.
 - Here, we are creating a tuple output to link our `meta.id` (aka sample ID) to the path of our `trimmed_reads`. 
@@ -337,7 +342,7 @@ def prefix = task.ext.prefix ?: "${meta.id}"
 ```
 
 - It's saying, `if` a `ext.prefix` is defined somewhere (as we'll learn, that "somewhere" is typically within the `conf/modules.config` file), then the `prefix` argument is assigned that string <br>
-- `else`, `prefix` is assigned to the `meta.id` tag (aka the sample ID). In other words, `meta.id` is assigned to `prefix` if `ext.prefix` is null. See [Elvis operator](https://zetcode.com/groovy/conditionals/)
+- `else`, `prefix` is assigned to `meta.id` defined in our `meta` map (aka the sample ID). In other words, `meta.id` is assigned to `prefix` if `ext.prefix` is null. See [Elvis operator](https://zetcode.com/groovy/conditionals/)
 
 <br>
 
@@ -361,8 +366,8 @@ def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
 ```
 def fail_fastq = save_trimmed_fail && meta.single_end ? "--failed_out ${prefix}.fail.fastq.gz" : save_trimmed_fail && !meta.single_end ? "--failed_out ${prefix}.paired.fail.fastq.gz --unpaired1 ${prefix}_R1.fail.fastq.gz --unpaired2 ${prefix}_R2.fail.fastq.gz" : ''
 ```
-`if` the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is from single end reads, then create the parameter `--failed_out ${prefix}.fail.fastq.gz` parameter/output, <br>
-`else if` the `save_trimmed_fail` parameter is `true` AND the `meta.id` tag is *not* (`!` character in `!meta.single_end`) from single end reads, <br>
+`if` the `save_trimmed_fail` parameter is `true` AND the `meta` map defines as single end reads (`meta.single_end = true`), then create the parameter `--failed_out ${prefix}.fail.fastq.gz` parameter/output, <br>
+`else if` the `save_trimmed_fail` parameter is `true` AND the `meta` map does *not* (`!` character in `!meta.single_end`) define as single end reads, <br>
 then output (`--failed_out`) failed paired reads as `${prefix}.paired.fail.fastq.gz`, output (`--unpaired1`) failed unpaired forward reads as `${prefix}_R1.fail.fastq.gz`, and output (`--unpaired2`) failed unpaired reverse reads as `${prefix}_R2.fail.fastq.gz"`,  <br>
 `else`, the `fail_fastq` argument is blank
 
@@ -372,7 +377,7 @@ then output (`--failed_out`) failed paired reads as `${prefix}.paired.fail.fastq
 def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fastp.fastq.gz" : "--out1 ${prefix}_R1.fastp.fastq.gz" )
 ```
 `if` `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br> 
-`else if` `false` AND if the `meta.id` tag is from single end reads, the create the `--out1 ${prefix}.fastp.fastq.gz` parameter/output, <br>
+`else if` `false` AND if the `meta` map defines as single end reads (`meta.single_end = true`), the create the `--out1 ${prefix}.fastp.fastq.gz` parameter/output, <br>
 `else` create the `--out1 ${prefix}_R1.fastp.fastq.gz` parameter/output
 
 <br>
@@ -381,7 +386,7 @@ def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fast
 def out_fq2 = discard_trimmed_pass ?: "--out2 ${prefix}_R2.fastp.fastq.gz"
 ```
 `if` `discard_trimmed_pass` parameter is `true`, then do nothing because passed trimmed reads are discarded, <br>
-`else if` `false` and the `meta.id` tag is from single end reads, the create the `--out2 ${prefix}.fastp.fastq.gz` parameter/output, <br> 
+`else if` `false` and the `meta` map defines as single end reads (`meta.single_end = true`), the create the `--out2 ${prefix}.fastp.fastq.gz` parameter/output, <br> 
 `else` create the `--out2 ${prefix}_R1.fastp.fastq.gz` parameter/output
 
 </details>
@@ -474,9 +479,9 @@ The big tell is that this last script accepts paired reads, as shown by the `--i
 <br>
 
 > [!NOTE] <br>
-> `inputs`/`directives` transformed to definition arguments, defined prior to the script block, are accessed within `script:` block via nextflow's dollar sign (`$`) variable <br>
+> `inputs` transformed to definition arguments, defined prior to the script block, are accessed within `script:` block via nextflow's dollar sign (`$`) variable <br>
 
-For example `$prefix` was defined from the `def prefix = task.ext.prefix ?: "${meta.id}"`, which, `$prefix` in this case is assigned the `meta.id` that was a directive defined at the beginning of this process code, `tag "$meta.id"`. 
+For example `$prefix` was defined from the `def prefix = task.ext.prefix ?: "${meta.id}"`, which, `$prefix` in this case is assigned to `meta.id` which is the sample ID information held within our `meta` map.
 
 `${reads[0]}` is another example. This was defined in the `input` section of the script as such:
 
@@ -488,10 +493,14 @@ tuple val(meta), path(reads), path(adapter_fasta)
 We will see that this input tuple comes from the samplesheet channel which takes the form: 
 
 ```
-[meta.id, [fastq_1, fastq_2]]
+meta  = [id: 'sample', single_end: false]
+reads = [
+    file('sample_R1_001.fastq.gz'),
+    file('sample_R2_001.fastq.gz')
+]
 ```
 
-So, the first `val` input in this tuple is the `meta.id`, followed by a paired `path` input to both the forward and reverse read files. In the script block, `${reads[0]}` is a nextflow variable that can capture the forward read (and `${reads[1]}` captures the reverse read).
+So, the first `val` input in this tuple is the `meta` map, followed by a paired `path` input to both the forward and reverse read files. In the script block, `${reads[0]}` is a nextflow variable that can capture the forward read (and `${reads[1]}` captures the reverse read).
 
 
 
@@ -548,7 +557,7 @@ Now, for any module (or subworkflow, which we'll learn in tutorial 5) we need to
 This figure summarizes the steps that we need to perform. The purple boxes are required and the green boxes are optional, depending on the module/subworkflow. Everything starts from the module (or subworkflow) that we add to the pipeline. <br>
 In this case, the `modules/nf-core/fastp/main.nf` file needs to be edited with the correct `directives`, `inputs`, `outputs`, script `arguments`, and the `script` itself. 
 - Many of the elements within this file refer to various others files/directories organized within a nextflow pipeline including: <br>
-    * the `--input samplesheet.csv` that is transformed into a `meta` tagged channel 
+    * the `--input samplesheet.csv` that is transformed into a tuple containing the `meta` map and `read` path information  
     * modules configuration file (`modules.config`) <br>
     * computational resources configuration file (`base.config`) <br>
     * custom scripts (`bin/`) <br>
@@ -750,7 +759,7 @@ ch_trimmed_reads = FASTP.out.trimmed_reads
 Let's focus on the inputs, first. We need the same number of inputs as declared within the `modules/nf-core/fastp/main.nf` file. 
 
 - The expected input parameters for FASTP as defined by the nf-core community can be viewed [here](https://nf-co.re/modules/fastp/#input), and are discussed here, as well:
-    - The first input expected was a tuple containing 3 qualifiers (the meta tag, the reads, and the adapter_fasta)
+    - The first input expected was a tuple containing 3 qualifiers (the `meta` map, the `reads`, and the `adapter_fasta`)
         - However, we edited the script to remove the adapter_fasta file so it now only expects a tuple with 2 qualifiers, so we can just keep it as the `ch_samplesheet`
     - The second input is a boolean (true/false) declaration on whether we want to discard the trimmed reads (or not)
     - The third input is a boolean (true/false) declaration on whether we want to save reads that failed the trimmming thresholds
@@ -922,12 +931,12 @@ Do you see that? The line:
 [[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/reads/SRR39817210_R1_001.fastq.gz, /workspaces/mdhhs_nextflow_training/reads/SRR39817210_R2_001.fastq.gz]]
 ```
 
-This is the channel created from our `samplesheet.csv` file. We can see that it is a tuple, the first being the id, which is the `${meta.id}` tag that is added as a directive within the FASTP module. The second part is what ultimately becomes the `path(reads)` input, where this is a combined read pair. So when we reference `reads[0]`, we can access the forward read and when we reference `reads[1]`, we can access the reverse read.
+This is the channel created from our `samplesheet.csv` file. We can see that it is a tuple, the first being the `meta` map, which contains two elements, `id` and `single_end`. These are accessed in our `FASTP` process script via `meta.id` (to create the tag directive and to generate the `prefix` in the script block) and `meta.single_end` to define conditional statements in the script block. The second part is what ultimately becomes the `path(reads)` input, where this is a combined read pair. So when we reference `reads[0]`, we can access the forward read and when we reference `reads[1]`, we can access the reverse read.
 
 
 Hopefully the `samplesheet.csv` > `ch_samplesheet` > `meta.id` > `tuple val(meta), path(reads)` connection is starting to make sense.
 
-**This `meta.id` tag will be incorporated into every module we use. Again, this ties a unique sample ID to it's respective FASTQ read pair files**
+**This `meta` map will be incorporated into every module we use. Again, this ties a unique sample ID to it's respective FASTQ read pair files**
 
 ### Troubleshoot error
 
@@ -988,7 +997,7 @@ In the next lesson, we will learn how to add a local module, aka add a module fr
 
 Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training).
 
-If you're relaunching your codespace, lauch the `tutorial_2_challenge` branch to have all progress made prior so that you can jump directly into this challenge. 
+If you're relaunching your codespace, launch the `tutorial_2_challenge` branch to have all progress made prior so that you can jump directly into this challenge. 
 
 ![Challenge branch](images/challenge_branch.png)
 
