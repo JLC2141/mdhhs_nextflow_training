@@ -40,7 +40,7 @@ The objectives of this tutorial are:
 2) Incorporate a read scrubbing step into our pipeline
 3) Retrieve and incorporate a reference file
 4) Understand required files to edit and nextflow syntax needed to incorporate the read scrubbing module into a pipeline workflow
-5) Optional challenge: Use of a `module alias` to use a module twice within a pipeline
+5) Optional challenge: learn more about nextflow `config` files
 
 <br> 
 
@@ -374,7 +374,7 @@ readItAndKeep --ref_fasta ref_genome.fasta --reads1 reads1.fq.gz --reads2 reads2
 
 <br>
 
-To view this our our VS code terminal, run the following:
+To view this in our VS code terminal, run the following:
 
 
 ```
@@ -403,8 +403,8 @@ We added one additional component to our tool run command, the `> genotype_A_res
 
 - You will notice two main outputs
     - Our "scrubbed" reads as FASTQ files, `SRR39817210.reads_1.fastq.gz` and `SRR39817210.reads_2.fastq.gz`
-        - named via the `--outprefix parameter`
-    - A `txt` file contained the scrubbed reads results
+        - named by sample ID via the `--outprefix` parameter
+    - A `txt` file containing the scrubbed reads results
         - In this run, we see that the original FASTQ files had 324,488 reads
         - Of those, 273,550 were kept, aka mapped to the genotype A reference fasta
 
@@ -415,7 +415,7 @@ Go ahead and run the following commands to rerun `readItAndKeep` with the genoty
 readItAndKeep --ref_fasta MK513622.1.reference.fasta --reads1 SRR39817210_R1_001.fastq.gz --reads2 SRR39817210_R2_001.fastq.gz --outprefix SRR39817210 > genotype_B3_results.txt
 ```
 
-And the genotype D8 reference fasta file: 
+And with the genotype D8 reference fasta file: 
 
 
 ```
@@ -475,20 +475,20 @@ Recall in tutorial 2 when we used the `view()` operator to view the `ch_samplesh
 This is the tuple that is in the first line of our input (`tuple val(meta) path (reads)`) and is equivalent in conceptual assignment as follows:
 
 ```
-meta  = [id: 'sample', single_end: false]
+meta  = [id: 'SRR39817210', single_end: false]
 reads = [
-    file('sample_R1_001.fastq.gz'),
-    file('sample_R2_001.fastq.gz')
+    file('SRR39817210_R1_001.fastq.gz'),
+    file('SRR39817210_R2_001.fastq.gz')
 ]
 ```
 
 - `ch_samplesheet` is a tuple. So when used as input into a process script
-    - We can access the elements of the `meta` map like so
+    - We can access the elements of the `meta` map as follows:
         - `meta.id`: retrieves the sample ID from the map
         - `meta.single_end`: retrieves the single-end flag, `false` in our case
-    - We can access the elements of `reads` containing the FASTQ file paths
+    - We can access the elements of `reads` containing the FASTQ file paths as follows:
         - `{reads[0]}` can access the forward read file
-        - `{reads[1]}` can access the forward read file
+        - `{reads[1]}` can access the reverse read file
 
 <br>
 
@@ -497,7 +497,7 @@ Okay, inputs are all set!
 
 > [!NOTE]
 > The names in the `input:` block is just intuitive. `meta` for metadata, `reads` for FASTQ reads, and `reference` for the reference fasta file. <br>
-> But, we could name these whatever we want. We're just creating the variables that will be referred to with the same name in the `script:` block section. <br>
+> But, we could name these whatever we want. We're just creating the variables that we can then reference in the `script:` block section. <br>
 
 ### Editing the READITANDKEEP module process script: defining outputs
 
@@ -600,12 +600,15 @@ Notice how this is basically what we just did before to run the `readItAndKeep` 
     - And finally, here we redirect the output to a `txt` file: `> ${prefix}_scrubbed_results.txt`
         - `${prefix}` captures different sample IDs and thus multiple `txt` file outputs if we had multiple samples
         - Notice how the `_scrubbed_results.txt` is exactly what we defined in the `output:` section to capture this file output properly in our results directory
+        - Just `path('*.txt')` in the `output:` section would have been *fine*, but what if you had multiple `txt` file outputs from a tool and wanted to differentiate them for dowmstream processes?
+ 
 
 <br>
 
 > [!Note]
 > `reads[0]` (and `reads[1]`) need to be in curly brackets `${reads[0]}` (`${reads[1]}`) <br>
-> For example, if `$reads[0]` was used as input into the `--reads1` parameter, the script would read this as `--reads1 SRR39817210_R1_001.fastq.gz SRR39817210_R2_001.fastq.gz[0]` <br>
+> For example, if `$reads[0]` was used as input into the `--reads1` parameter, the script would read this as <br>
+> `--reads1 SRR39817210_R1_001.fastq.gz SRR39817210_R2_001.fastq.gz[0]` <br>
 > Without the curly brackets, the `[0]` is being treated as literal text, rather than as an index operation. The curly brackets are needed to capture the index.
 
 In general, curly brackets are needed to distinguish nextflow variables from general text. For example, when we define our `txt` file output, `${prefix}_scrubbed_results.txt`, the curly brackets are needed to maintain our nextflow variable `${prefix}` to incorporate unique sample IDs into the file name.
@@ -621,13 +624,13 @@ Save the file:
 ctrl + s
 ```
 
-Righteous! We've completed the edits to the `modules/local/readitandkeep/main.nf` file. Next, we need to incorporate the reference fasta file into our pipeline.
+Righteous! We've completed the edits to the `modules/local/readitandkeep/main.nf` file. Next, we need to edit the remaining files to properly incorporate the `READITANDKEEP` module into our pipeline.
 
 # Part III: Incorporating a new module into the pipeline
 
 ### Incorporate reference fasta in assets directory
 
-From our `projectDir`, `/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline`, make a directory within the `assets/` directory called `references` and then change into the `references` directory.
+From our `projectDir`, `/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline`, make a directory within the `assets/` directory called `references/` and then change into the `references/` directory.
 
 ```
 mkdir -p assets/references
@@ -642,9 +645,15 @@ Retrieve the measles D8 genotype reference fasta file (`MH356245`) from the [pha
 wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/D8/MH356245.1.reference.fasta
 ```
 
-Great, our reference file for mapping has been obtained. Now, open the `nexflow.config` file present in the `projectDir`:
+Great, our reference file for mapping has been obtained. 
+
+> [!Note]
+> In theory, we can add our reference file within a different directory.
+> But best standard practice in nextflow (and nf-core) is to place reference files and databases within the `assets/` directory.
 
 ### Create a new parameter for the reference file in nextflow.config
+
+Open the `nexflow.config` file present in the `projectDir`.
 
 ![nextflow.config](images/nextflow_config.png)
 
@@ -652,8 +661,8 @@ Again, `nextflow.config` can be viewed as a global configuration file, setting c
 - And we will place the path to our reference file with a new parameter called `reference` just below the `genome` parameter.
 
 > [!Note]
-> We are not making use of the `genome` parameter to provide our path. <br>
-> nf-core has built-in support for reference genomes in `conf/igenomes.config` that crosscheck with the `genome` parameter during pipeline initialization. <br>
+> We are not making use of the `genome` parameter to provide our path to our reference file. <br>
+> nf-core has built-in support for reference genomes in `conf/igenomes.config` that crosschecks with the `genome` parameter during pipeline initialization. <br>
 > Our script would break trying to define our measles reference file path as the `genome` parameter so instead, we make a new parameter called `reference`. <br>
 
 <br>
@@ -697,7 +706,7 @@ And near line 272:
 
 ![module config import](images/modules_import.png)
 
-You can see that this `nextflow.config` file is pulling in various other config files, including `base.config` and `modules.config`. This is just part of the organization style of nextflow. In theory, you could define all these components within the `nextflow.config` file, but breaking out these config files into specified files makes pipeline organization better. We're only working with one reference file for this tutorial but you could even make a [conf/reference.config](https://github.com/phac-nml/measeq/blob/main/conf/reference.config) file if you wanted to reference multiple measles genomes and then you would add the following line to your `nextflow.config` file:
+You can see that this `nextflow.config` file is pulling in various other config files, including `base.config` and `modules.config`. This is just part of the organizational style of nextflow. In theory, you could define all these components within the `nextflow.config` file, but breaking out these config files into specified files makes pipeline organization better. We're only working with one reference file for this tutorial but you could even make a [conf/reference.config](https://github.com/phac-nml/measeq/blob/main/conf/reference.config) file if you wanted to reference multiple measles genomes and then you would add the following line to your `nextflow.config` file:
 - `includeConfig 'conf/reference.config'`  
 
 Save the file:
@@ -742,6 +751,8 @@ def ch_reference = channel.value(file(params.reference, checkIfExists: true))
 ch_reference.view()
 ```
 
+**Note that `ch_trimmed_reads.view()` is also present so we'll be able to view the output channel from `FASTP`, as well.** 
+
 And place this code in the space of the second arrow:
 
 ```
@@ -778,6 +789,11 @@ The second code block is explicitly invoking the `READITANDKEEP` module
 - The second input is the `ch_reference` we just defined in the first code block
     - This is the `path reference` defined in the `input:` section within the `modules/local/readitandkeep/main.nf` file 
 
+> [!Note]
+> In contrast to the `FASTP` module in tutorial 2, we are not defining any output channels post `READITANDKEEP`.
+> The outputs from the `READITANDKEEP` module are not needed for any downstream process.
+> And so we do not need to emit any output channels in our workflow script. 
+
 Save the file:
 
 ```
@@ -812,7 +828,7 @@ Nooooooooo, not another error! This one is stating that script compilation faile
 
 This error output is suggesting that this error is on line 50 of our `workflows/myfirstpipe.sh` script where `ch_reference` was input. 
 
-The error is so subtle. Take a look at the `FASTP` module in this script to figure out what we left out.
+The error is so subtle. Try to figure out what we left out. Take a look at the `FASTP` module in this script for a hint! 
 
 <details>
 <summary>Reveal solution, here</summary>
@@ -869,9 +885,23 @@ And if we navigate to the work directory for the `READITANDKEEP` process and vie
 
 ![RIAK work dir](images/work_dir.png)
 
-We see that the command for `readItAndKeep` is as expected, and is the same command we just ran before outside of nextflow.
+We see that the command for `readItAndKeep` is as expected, and is the same way we ran `readItAndKeep` outside of nextflow earlier in the tutorial.
 
-**Your `work/` directory hash to the FASTP process will be different**
+**Your `work/` directory hash to the READITANDKEEP process will be different**
+
+In addition, did you catch the two outputs from `ch_reference.view()` and `ch_trimmed_reads_view()`.
+
+`ch_reference.view()` output:
+
+![ch_reference view](images/ref_view.png)
+
+And is as expected because it's the path to the reference fasta file. 
+
+`ch_trimmed_reads_view()` output:
+
+![ch_trimmed_reads view](images/trimmed_view.png)
+
+Maintains the `tuple val(meta) path (reads)` structure. We will use `ch_trimmed_reads` in tutorial 4 for the next module. 
 
 # Recap
 
@@ -884,7 +914,7 @@ We see that the command for `readItAndKeep` is as expected, and is the same comm
     - How to incorporate the module into our workflow through editing of:
         - the `assets/` directory: `assets/references/MH356245.1.reference.fasta` 
         - the `nextflow.config` file to define our new `reference` parameter: `reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"`
-        - the workflow script, `workflows/myfirstpipeline.nf`, to create our reference channel, `ch_reference` and declare our `READITANDKEEP` module.
+        - the workflow script, `workflows/myfirstpipeline.nf`, to create our reference channel, `ch_reference` and implement our `READITANDKEEP` module.
 
 
 I encourage you to go through the challenge section to learn more about nextflow `config` files. 
