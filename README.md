@@ -889,7 +889,7 @@ We see that the command for `readItAndKeep` is as expected, and is the same way 
 
 **Your `work/` directory hash to the READITANDKEEP process will be different**
 
-In addition, did you catch the two outputs from `ch_reference.view()` and `ch_trimmed_reads_view()`.
+In addition, did you catch the two outputs from `ch_reference.view()` and `ch_trimmed_reads_view()`?
 
 `ch_reference.view()` output:
 
