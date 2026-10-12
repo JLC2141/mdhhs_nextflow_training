@@ -42,6 +42,9 @@ workflow MYFIRSTPIPELINE {
     FASTQC_RAW(ch_samplesheet)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })
 
+    //
+    // MODULE: Run readItAndKeep for read scrubbing
+    //
     READITANDKEEP(
         ch_samplesheet,
         ch_reference
