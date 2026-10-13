@@ -1162,7 +1162,7 @@ And voila, our genotype D8 reference file returns as the `reference` parameter.
 
 But do you notice the big drawback to this method of defining the `--reference` parameter via the command line? We need to define the whole path for the reference file. In this case, `${projectDir}/assets/references/MH356245.1.reference.fasta'` doesn't work. Other built in nextflow features, like `-params-file params.yml` and a custom config file `-c training.config` are meant to function inside of nextflow so nextflow core options, like `projectDir` are useable inside of those config files. 
 
-Parameters requiring a path are not ideal as a parameter specified within the `nextflow run` command line. But for the purposes of this challenge, I just wanted to demonstrate how nextflow prioritizes config files and parameter overrides. 
+Parameters requiring a path are not ideal as a parameter specified within the `nextflow run` command line. But for the purpose of this challenge, I just wanted to demonstrate how nextflow prioritizes config files and parameter overrides. 
 
 So in summary, we learned two major things about configuration files from this tutorial. 
 
