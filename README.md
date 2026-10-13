@@ -922,6 +922,255 @@ I encourage you to go through the challenge section to learn more about nextflow
 
 # Challenge: Exploring the priority of nextflow config files
 
+Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_3_challenge).
+
+If you're relaunching your codespace, launch the `tutorial_3_challenge` branch to have all progress made prior in tutorial 3 so that you can jump directly into this challenge. 
+
+![Challenge branch](images/challenge_branch.png)
+
+In this challenge, we will dive deeper into nextflow `config` files and see how we can override default parameters via `config` file priority. 
+
+Recall the edits we made to the `nextflow.config` file:
+
+![nextflow.config edits](images/nextflow_config_edits.png)
+
+We specified the path to our reference file as such: 
+
+```
+params {
+    reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"
+}
+```
+
+So at the moment, when we run our pipeline in its current form, params.reference is pointing to `MH356245.1.reference.fasta`, which is the measles genotype D8 reference file.
+
+Let's go ahead and download the other two genotype reference fasta files to the `assets/reference/` directory. From our `launchDir`, navigate to `nf-core-myfirstpipeline/assets/reference/`
+
+```
+cd nf-core-myfirstpipeline/assets/references/
+```
+
+![nav ref](images/nav_ref.png)
+
+Obtain the genotype A reference file:
+
+```
+wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/A/FJ211590.fasta
+```
+
+And the genotype B3 reference fasta file:
+
+```
+wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/B3/MK513622.1.reference.fasta
+```
+
+![wget refs](images/wget_refs.png)
+
+Now navigate back to the `launchDir` and make a file called `tutorial.config`
+
+```
+cd /workspaces/mdhhs_nextflow_training/
+touch training.config
+```
+
+Select the `tutorial.config` file in the file explorer panel to open the editor and place the following code in the file:
+
+```
+params {
+    reference = "${projectDir}/assets/references/MK513622.1.reference.fasta"
+}
+```
+
+Note how we are now providing the path to the B3 genotype reference fasta file and creating the parameter `reference` again via the `params {}` encapsulation. 
+
+Save the file:
+
+```
+ctrl + s
+```
+
+![Training config](images/training_config.png)
+
+Now, select the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
+
+```
+nextflow run nf-core-myfirstpipeline/main.nf \
+    -profile docker \
+    --input samplesheet.csv \
+    --outdir results \
+    -c training.config
+```
+
+> [!Note]
+> Make sure that you only use one dash for the `-c` in `-c training.config`
+
+![Run nextflow edits](images/run_nextflow_edit.png)
+
+We are adding a break line (`\`) to the `--outdir results` line and adding the `-c training.config` line just below it. 
+
+Save the file:
+
+```
+ctrl + s
+```
+
+From the `launchDir`, `/workspaces/mdhhs_nextflow_training/`, download the sample:
+
+```
+bash sample_download.sh
+```
+
+Create the `samplesheet.csv` file
+
+```
+python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
+```
+
+Run the pipeline:
+
+```
+bash run_nextflow_analysis.sh
+```
+
+Upon pipeline launch, you'll notice a couple things. First, our config file is listed in the `Core Nextflow options` section
+
+![configFiles](images/config_launch.png)
+
+And second, because we still have the `ch_reference.view()` operator in our workflow script, we see the reference that is used in our pipeline:
+
+![ref b3](images/b3_ref.png)
+
+Whoa! It changed! The reference used to be genotype D8 (`MH356245.1.reference.fasta`) but now it's genotype B3 (`MK513622.1.reference.fasta`), the one we specified in the `training.config` file, **even though reference genotype D8 (`MH356245.1.reference.fasta`) is still specified as a `reference` parameter in `nextflow.config`**.
+
+And if you really want to convince yourself of this, navigate to the `READITANDKEEP` task in your `work` directory and view the `.command.sh` file.
+
+![ref b3 confirm](images/ref_b3_confirm.png)
+
+**Your `work/` directory hash to the READITANDKEEP process will be different**
+
+Okay, let's have some fun and try something else. From our `launchDir`, `/workspaces/mdhhs_nextflow_training/`, make a new file called `params.yml`:
+
+```
+touch params.yml
+```
+
+Now, select the `params.yml` file in the file explorer panel to open the editor and add the following code:
 
 
+```
+reference: "${projectDir}/assets/references/FJ211590.fasta"
+```
 
+Note how we are now providing the path to the genotype A reference fasta file and creating the parameter `reference`, though slightly different than the way we just did it in the `training.config` file. But this is just expected formatting for these two different file types. Both achieve the same end goal of making a `reference` parameter. 
+
+![params yml](images/params_yml.png)
+
+Save the file:
+
+```
+ctrl + s
+```
+
+Reopen the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
+
+
+```
+nextflow run nf-core-myfirstpipeline/main.nf \
+    -profile docker \
+    --input samplesheet.csv \
+    --outdir results \
+    -c training.config \
+    -params-file params.yml
+```
+> [!Note]
+> Make sure that you only use one dash at the front of `params-file` in `-params-file params.yml`
+
+![run edit again](images/run_edit_again.png)
+
+We are adding a break line (`\`) to the `-c training.config` line and adding the `--params-file params.yml` line just below it. 
+
+Save the file:
+
+```
+ctrl + s
+```
+
+Restart the nextflow pipeline: 
+
+```
+bash run_nextflow_analysis.sh
+```
+
+What is this magic? Now we see that the reference file for `params.reference` points to the genotype A reference file, **even though reference genotype D8 (`MH356245.1.reference.fasta`) is still specified as a `reference` parameter in `nextflow.config` and, reference genotype B3 (`MK513622.1.reference.fasta`) is still specified as a `reference` parameter in the `training.config` file.**
+
+![ref a](images/ref_a.png)
+
+And if you really want to convince yourself of this, navigate to the `READITANDKEEP` task in your `work` directory and view the `.command.sh` file.
+
+![ref A confirm](images/ref_a_confirm.png)
+
+**Your `work/` directory hash to the READITANDKEEP process will be different**
+
+Well, I'm sorry to break it to you, but this isn't magic. This is how nextflow was built to prioritize various configuration files. The priority, from highest to lowest is as follows:
+
+![Config priority](images/config_priority.png)
+
+Focusing on the top four configuration types:
+
+command line `--specified_parameter` > `-params-file params.yml` > `-c custom.config` > `nextflow.config`
+
+Meaning, these are ways to override exisiting parameters in our pipeline by placing these parameters in one of these configuration formats that have higher priority. That is why the `reference` parameter for specifying the reference file for genotype B3 took priority in the `training.config` file over the `reference` parameter for specifying the reference file for genotype D8 in the `nextflow.config` file. And then the `reference` parameter for specifying the reference file for genotype A took priority in the `params.yml` file over both `training.config` and `nextflow.config`.
+
+Find more information on this prioritization [here](https://docs.seqera.io/nextflow/config) and [here](https://ggrimes.github.io/workflows-nextflow/08-configuration/index.html#how-configuration-files-are-combined)
+
+A variety, and prioritization, of config files allows you to tailor your workflow toward your needs. The highest priority is specifying a parameter directory on the command link invocation of the nextflow pipeline via `nextflow run`. 
+
+For example, let's try to get our D8 genotype back as our `reference` parameter. Reopen the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
+
+
+```
+nextflow run nf-core-myfirstpipeline/main.nf \
+    -profile docker \
+    --input samplesheet.csv \
+    --outdir results \
+    -c training.config \
+    -params-file params.yml \
+    --reference '/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline/assets/references/MH356245.1.reference.fasta'
+```
+
+![run edit final](images/run_edit_final.png)
+
+We are adding a break line (`\`) to the `-params-file params.yml` line and adding the `--reference '/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline/assets/references/MH356245.1.reference.fasta'` line just below it. 
+
+Save the file:
+
+```
+ctrl + s
+```
+
+Restart the nextflow pipeline: 
+
+```
+bash run_nextflow_analysis.sh
+```
+
+And voila, our genotype D8 reference file returns as the `reference` parameter.
+
+
+![ref d8](images/ref_d8.png)
+
+
+But do you notice the big drawback to this method of defining the `--reference` parameter via the command line? We need to define the whole path for the reference file. In this case, `${projectDir}/assets/references/MH356245.1.reference.fasta'` doesn't work. Other built in nextflow features, like `-params-file params.yml` and a custom config file `-c training.config` are meant to function inside of nextflow so nextflow core options, like `projectDir` are useable inside of those config files. 
+
+Parameters requiring a path are not ideal as a parameter specified within the `nextflow run` command line. But for the purpose of this challenge, I just wanted to demonstrate how nextflow prioritizes config files and parameter overrides. 
+
+So in summary, we learned two major things about configuration files from this tutorial. 
+
+1) You can make as many `config` files as you want to be imported into `nextflow.config`
+    - `base.config`
+    - `modules.config`
+    - `references.config`
+
+It's just an organizational preference. 
+
+2) Nextflow prioritizes config files such that it can be used to override parameters in your pipeline.
