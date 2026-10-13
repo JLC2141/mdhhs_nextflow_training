@@ -492,6 +492,7 @@ reads = [
 
 <br>
 
+For more information on meta maps, see [here](https://nf-co.re/docs/developing/components/meta-map)
 
 Okay, inputs are all set! 
 
