@@ -633,6 +633,7 @@ Righteous! We've completed the edits to the `modules/local/readitandkeep/main.nf
 From our `projectDir`, `/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline`, make a directory within the `assets/` directory called `references/` and then change into the `references/` directory.
 
 ```
+cd /workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline
 mkdir -p assets/references
 cd assets/references
 ```
