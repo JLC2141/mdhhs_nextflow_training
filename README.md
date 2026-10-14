@@ -5,11 +5,11 @@
 - [Part III](#part-iii-obtaining-a-cdc-pipeline-from-github-and-performing-a-test-run)
 - [Recap](#recap)
 
-# 📖 2026 Midwest AMD Symposium Nextflow breakout session
+# 2026 Midwest AMD Symposium Nextflow breakout session
 
 <br>
 
-# 📖 Overview
+# Overview
 
 We will learn how to obtain and run pre-built nextflow pipelines.
 
