@@ -12,12 +12,12 @@ We will learn how to obtain and run pre-built nextflow pipelines.
 
 Learning objectives:
 
-* Launch, use GitHub Codespace, and understand the underlying dev container environment 
-* Download an nf-core pipeline and prepare components needed to run the pipeline
-* Explore and familiarize yourself with nextflow outputs and functionality
-* Download and launch a CDC-available nextflow pipeline 
-* Experience and troubleshoot nextflow errors
-* Understand a recent and significant change made in Nextflow v26.04
+* Launch, use GitHub Codespace, and understand the underlying dev container environment.
+* Download an nf-core pipeline and prepare components needed to run the pipeline.
+* Explore and familiarize yourself with nextflow outputs and functionality.
+* Download and launch a CDC-available nextflow pipeline.
+* Experience and troubleshoot nextflow errors.
+* Understand a recent and significant change made in Nextflow v26.04.
 
 <br>
 
