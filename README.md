@@ -5,6 +5,9 @@
 - [Part III](#part-iii-obtaining-a-cdc-pipeline-from-github-and-performing-a-test-run)
 - [Recap](#recap)
 
+# 📖 2026 Midwest AMD Symposium Nextflow breakout session
+
+<br>
 
 # 📖 Overview
 
@@ -20,9 +23,6 @@ Learning objectives:
 * Understand a recent and significant change made in Nextflow v26.04.
 
 <br>
-
-# 📖 2026 Midwest AMD Symposium Nextflow breakout session
-
 
 # Part I: Launching GitHub Codespace
 
