@@ -275,7 +275,7 @@ Step 3, we need to make our samplesheet. This is a `CSV` file that typically tak
 - The samplesheet is typically three columns:
     - The first column represents the SRR accession number (or any unique sample identifier based on your FASTQ file naming scheme).
     - The second column provides the relative path to the forward read for a given sample.
-    - The third columns provides the relative path to the reverse read for a given sample.
+    - The third column provides the relative path to the reverse read for a given sample.
 
 New rows are added for each sample in your analysis.
 
@@ -377,7 +377,7 @@ Now, select on the `base.config` file contained within the `nf-core-demo_1.1.0/1
 
 ![base.config before](images/base_config_before.png)
 
-You see, the `label 'process_low'` directive from the FASTQC module refers to the computational resources defined with the `withLabel:process_low` section of the `base.config` file. Alter the `process_low` section so that the memory is limited to 6.GB:
+You see, the `label 'process_low'` directive from the FASTQC module refers to the computational resources defined within the `withLabel:process_low` section of the `base.config` file. Alter the `process_low` section so that the memory is limited to 6.GB:
 
 ![base.config after](images/base_config_after.png)
 
@@ -550,7 +550,7 @@ ll
 
 ![SEQTK_TRIM workdir](images/seqtk_work.png)
 
-We notice that the full hash actually consists of 32 hexadecimal characters (the first two characters create the first directory within `work/` (in my example, `86`) and the remaining 30 characters represent the sub-directory (in my example, `c94b15783c2bb555ef025d7a837a43`)). And using the long list command (`ll`), we see that the input files came from our `reads/` directory, which ultimately results in the trimmed FASTQ file outputs via `SEQTK`. 
+We notice that the full hash actually consists of 32 hexadecimal characters (the first two characters create the first directory within `work/` (in my example, `86`) and the remaining 30 characters represent the sub-directory (in my example, `c94b15783c2bb555ef025d7a837a43`). And using the long list command (`ll`), we see that the input files came from our `reads/` directory, which ultimately results in the trimmed FASTQ file outputs via `SEQTK`. 
 
 We can see the actual command that was run by looking at the .command.sh file
 
@@ -560,7 +560,7 @@ cat .command.sh
 
 ![.command.sh file](images/command.sh.png)
 
-From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the very basic usage of the seqtk trimfq command is as follow:
+From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the very basic usage of the seqtk trimfq command is as follows:
 
 ![SEQTK trimfq](images/seqtk_trimfq.png)
 
