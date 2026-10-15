@@ -592,7 +592,7 @@ So in the nextflow pipeline script for SEQTK, each raw FASTQ file gets trimmed, 
 
 Okay, so hopefully that provides you a little insight into the nextflow resume feature. The checkpoints provided by resume are particularly useful if your pipeline fails halfway through an analysis and you want to restart your pipeline without having to re-analyze everything from the beginning. 
 
-> [!CAUTION] <br>
+> [!Caution]
 > Work directories can take up a lot of storage. <br>
 > In our work, we delete the work directory once a pipeline successfully completes. <br>
 
