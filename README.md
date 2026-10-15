@@ -257,7 +257,7 @@ pigz *.fastq
 ![fasterq dump](images/fasterq_dump.png)
 
 
-Let's reorganize or FASTQ files into a reads directory
+Let's reorganize our FASTQ files into a reads directory
 
 ```
 mkdir reads
