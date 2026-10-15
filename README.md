@@ -564,7 +564,7 @@ From the seqtk [GitHub repository](https://github.com/lh3/seqtk), we see the ver
 
 ![SEQTK trimfq](images/seqtk_trimfq.png)
 
-Which is exactly what is occurring in our nextflow pipeline, except with a little more bells and whistles to the command itself. Try copying and pasting the following command into your terminal. 
+Which is exactly what is occurring in our nextflow pipeline, except with a little more complexity. Try copying and pasting the following command into your terminal. 
 
 ```
 printf "%s\n" SRR3747659_R1_001.fastq.gz SRR3747659_R2_001.fastq.gz | while read f; 
