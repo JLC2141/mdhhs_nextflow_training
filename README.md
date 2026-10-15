@@ -639,7 +639,7 @@ Again, this `cache` directory and the `work` directory form the basis of the `re
 
 In summary, all nextflow pipelines are able to be invoked from a single-line command providing nextflow core options and pipeline parameter inputs. <br>
 
-Under the hood, nextflow has been designed as a powerful workflow management system that enables source tracking of all tasks and files created from an analysis. 
+Under the hood, nextflow has been designed as a powerful workflow management system that enables source tracing of all tasks and files created from an analysis. 
  
 <br>
 
@@ -671,7 +671,7 @@ Where you can paste the URL you copied from the MIRA-NF GitHub repository after 
 
 ![mira release](images/pipeline_releases.png)
 
-You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your computer:
+You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your codespace VM:
 
 ```
 ls Mira-nf
@@ -682,7 +682,7 @@ ls Mira-nf
 
 You might notice that some of these files and directories in this pipeline look similar to the nf-core-demo pipeline. That's because nextflow expects and has standard files/directories for built-in functionality.
 
-For now, enter the following command to run a built-in test of the pipeline:
+Okay, let's run the pipeline! Enter the following command to run a built-in test of the pipeline:
 
 ```
 nextflow run Mira-nf/main.nf \
@@ -699,7 +699,7 @@ nextflow run Mira-nf/main.nf \
 > We did not go through and make the sample sheet and obtain FASTQ files (as we did in `Part II`) because Mira has a built-in test. <br>
 > But, do you notice the same main components as mentioned before? <br>
 > We see the `nextflow run` command, the path to the `main.nf` file, the `profile` core option, and `input` and `output` parameters <br>
-> Plus, a couple of additional required inputs that are specific to this pipeline and outlined in the [documentation](https://github.com/CDCgov/MIRA-NF#input-parameters-for-mira-nf-workflows) <br>
+> Plus, a couple of additional required inputs that are specific to this pipeline, as outlined in the [documentation](https://github.com/CDCgov/MIRA-NF#input-parameters-for-mira-nf-workflows) <br>
 
 <br>
 
@@ -709,7 +709,7 @@ Awesome, another error! In contrast to the error in `Part II` (computing limitat
 
 ### Group challenge exercise 2
 
-And this is a problem with nextflow, at times, when it comes to error reporting. However, take some time with your group and try to resolve the error to get your pipeline running. 
+And this is a problem with nextflow, at times, when it comes to error reporting. However, take some time with your group to try to resolve the error and get your pipeline running. 
 
 **We will review the solution together after you take some time to troubleshoot.**
 
