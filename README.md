@@ -968,14 +968,14 @@ wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/re
 
 ![wget refs](images/wget_refs.png)
 
-Now navigate back to the `launchDir` and make a file called `tutorial.config`
+Now navigate back to the `launchDir` and make a file called `training.config`
 
 ```
 cd /workspaces/mdhhs_nextflow_training/
 touch training.config
 ```
 
-Select the `tutorial.config` file in the file explorer panel to open the editor and place the following code in the file:
+Select the `training.config` file in the file explorer panel to open the editor and place the following code in the file:
 
 ```
 params {
