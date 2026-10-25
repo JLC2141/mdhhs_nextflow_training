@@ -1,0 +1,162 @@
+{
+    "sarscov2 - [fastq1, fastq2], index, fasta, false": {
+        "content": [
+            "f248a63ea0acdcfc85ce098303fcf6f7",
+            "57aeef88ed701a8ebc8e2f0a381b2a6",
+            {
+                "versions_bwamem2": [
+                    [
+                        "BWAMEM2_MEM",
+                        "bwamem2",
+                        "2.2.1"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BWAMEM2_MEM",
+                        "samtools",
+                        "1.22.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-18T10:19:00.582222444",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - [fastq1, fastq2], index, fasta, true - stub": {
+        "content": [
+            {
+                "bam": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "crai": [
+                    
+                ],
+                "cram": [
+                    
+                ],
+                "csi": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.csi:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sam": [
+                    
+                ],
+                "versions_bwamem2": [
+                    [
+                        "BWAMEM2_MEM",
+                        "bwamem2",
+                        "2.2.1"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BWAMEM2_MEM",
+                        "samtools",
+                        "1.22.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-02-19T11:54:06.902806102",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - [fastq1, fastq2], index, fasta, true": {
+        "content": [
+            "34be5b0b2caa9bf73d9a4272e9feef0e",
+            "af8628d9df18b2d3d4f6fd47ef2bb872",
+            {
+                "versions_bwamem2": [
+                    [
+                        "BWAMEM2_MEM",
+                        "bwamem2",
+                        "2.2.1"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BWAMEM2_MEM",
+                        "samtools",
+                        "1.22.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-18T10:19:12.62556053",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - fastq, index, fasta, false": {
+        "content": [
+            "f1a373d2a89784d7af4f3ec88c2ec046",
+            "798439cbd7fd81cbcc5078022dc5479d",
+            {
+                "versions_bwamem2": [
+                    [
+                        "BWAMEM2_MEM",
+                        "bwamem2",
+                        "2.2.1"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BWAMEM2_MEM",
+                        "samtools",
+                        "1.22.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-18T10:18:36.073485811",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "sarscov2 - fastq, index, fasta, true": {
+        "content": [
+            "edbeb54d3fdd8460db000ea49a3b2f35",
+            "94fcf617f5b994584c4e8d4044e16b4f",
+            {
+                "versions_bwamem2": [
+                    [
+                        "BWAMEM2_MEM",
+                        "bwamem2",
+                        "2.2.1"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "BWAMEM2_MEM",
+                        "samtools",
+                        "1.22.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-18T10:18:47.978970815",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    }
+}
