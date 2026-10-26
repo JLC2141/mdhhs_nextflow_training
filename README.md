@@ -1019,7 +1019,7 @@ Notice this is slightly different from the first FASTQC module call. In the firs
 Okay, so let's rerun our nextflow analysis:
 
 ```
-bash run_nextflow_pipeline.sh
+bash run_nextflow_analysis.sh
 ```
 
 **If you started from the `tutorial_2_challenge` branch you will first need to download your samples again and prepare the `samplesheet.csv` file. Refer to the section, `Part III: Testing the pipeline`, if you need a refresher.** 
