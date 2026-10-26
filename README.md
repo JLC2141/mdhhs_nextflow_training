@@ -693,7 +693,7 @@ You can override the default `publishDir` settings by creating a `withName:` lin
 
 **Step 3.** Edit the `workflows/myfirstpipeline.nf` file to include the new module/subworkflow
 
-Open the `workflows/myfirstpipe.nf` file. This is what it should look like now, at the beginning of the file: <br>
+Open the `workflows/myfirstpipeline.nf` file. This is what it should look like now, at the beginning of the file: <br>
 
 ![Workflow before I](images/workflow_before_1.png) <br>
 
@@ -1005,7 +1005,7 @@ If you're relaunching your codespace, launch the `tutorial_2_challenge` branch t
 
 Refer to the pipeline image at the beginning of this tutorial. We typically run FASTQC on the raw reads and then again on the trimmed reads to make sure that our reads are better quality post-trimming. 
 
-So let's do that! Edit the `workflows/myfirstpiple.nf` script and add the FASTQC module again just below our FASTP module:
+So let's do that! Edit the `workflows/myfirstpipeline.nf` script and add the FASTQC module again just below our FASTP module:
 
 ```
 FASTQC(ch_trimmed_reads)
@@ -1030,7 +1030,7 @@ Ooo nooooo... we ran into an error:
 
 FASTQC has already been used and can't be used again in this manner. We will introduce the `module alias` functionality so that we can use the FASTQC module twice within our workflow.
 
-At the top of the  `workflows/myfirstpiple.nf` script, where we import our modules/subworkflows, make the following edits.
+At the top of the  `workflows/myfirstpipeline.nf` script, where we import our modules/subworkflows, make the following edits.
 
 Before:
 
@@ -1053,7 +1053,7 @@ And an additional FASTQC import line was added:
 include { FASTQC as FASTQC_TRIMMED} from '../modules/nf-core/fastqc/main'
 ```
 
-The `FASTQC as FASTQ_module_alias` is the key part to successfully create a module alias. We can then refer to `FASTQC_RAW` and `FASTQC_TRIMMED` in our workflow to distinguish between these two modules. Let's continue editing our `workflows/myfirstpiple.nf` file:
+The `FASTQC as FASTQ_module_alias` is the key part to successfully create a module alias. We can then refer to `FASTQC_RAW` and `FASTQC_TRIMMED` in our workflow to distinguish between these two modules. Let's continue editing our `workflows/myfirstpipeline.nf` file:
 
 
 ![FASTQC module aliases](images/fastqc_modules.png)
