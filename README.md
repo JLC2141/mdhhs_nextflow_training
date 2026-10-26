@@ -819,7 +819,7 @@ At other points in this tutorial series, we will experience other edits that nee
 Navigate back to the launch directory: 
 
 ```
-cd /workspaces/mdhhs_nextflow_training/nextflow_training
+cd /workspaces/mdhhs_nextflow_training/
 ```
 
 -You'll notice three files:
