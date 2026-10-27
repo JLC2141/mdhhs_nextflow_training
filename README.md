@@ -1,12 +1,11 @@
 # Table of contents
 - [Overview](#-overview)
-- [Tutorial 3](#-tutorial-3)
-- [Part I](#part-i-creating-a-nextflow-module-from-an-nf-core-starter-template)
-- [Part II](#part-ii-editing-a-new-module)
-- [Part III](#part-iii-incorporating-a-new-module-into-the-pipeline)
-- [Part IV](#part-iv-testing-the-pipeline)
+- [Tutorial 4](#-tutorial-4)
+- [Part I](#part-i-installing-and-editing-two-nextflow-modules-from-nf-core-cli)
+- [Part II](#part-ii-incorporating-new-modules-into-the-pipeline)
+- [Part III](#part-iii-testing-the-pipeline)
+- [Challenge](#challenge-add-bowtie2-and-a-parameter-to-choose-between-aligners)
 - [Recap](#recap)
-- [Challenge](#challenge-exploring-the-priority-of-nextflow-config-files)
 
 # 📖 Overview
 
@@ -26,21 +25,20 @@ The pipeline then performs the following steps
     - Does the quality of our reads improve post-trimming?
 4) Read scrubbing on raw FASTQ reads with [read-it-and-keep](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep)
     - If you anticipated submitting these sequences to a database and wanted to ensure removal of human reads
-5) Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2)
-    - How well do our trimmed reads map to a reference genome?
-6) Read mapping stats with [SAMtools](https://github.com/samtools/samtools)
+5) Read alignment with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2)
+    - How well do our trimmed reads align to a reference genome?
+6) Read alignment stats with [SAMtools](https://github.com/samtools/samtools)
     - Also converts SAM to BAM if you were to proceed with variant calling
 7) Results report generation with [MultiQC](https://github.com/multiqc/multiqc)
     - Aggregates results from our pipeline into a final report
 
-# 📖 Tutorial 3
+# 📖 Tutorial 4
 
 The objectives of this tutorial are:
-1) Use the nf-core command line interface (CLI) to create a new module from a starter template
-2) Incorporate a read scrubbing step into our pipeline
-3) Retrieve and incorporate a reference file
-4) Understand required files to edit and nextflow syntax needed to incorporate the read scrubbing module into a pipeline workflow
-5) Optional challenge: learn more about nextflow `config` files
+1) Use the nf-core command line interface (CLI) to create two new modules from a starter template
+2) Incorporate reference indexing and read alignment into our pipeline
+4) Understand required files to edit and nextflow syntax needed to incorporate the new modules into the pipeline workflow
+5) Optional challenge: learn more about parameterization
 
 <br> 
 
@@ -48,11 +46,11 @@ The objectives of this tutorial are:
 
 **Make sure that you are signed-in to your GitHub account.**
 
-Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_3).
+Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_4).
 
-Select the `branch` icon and select the `tutorial_3` branch.
+Select the `branch` icon and select the `tutorial_4` branch.
 
-The webpage will reload. Confirm that the `tutorial_3` branch is loaded. Select the green <> Code icon, the Codespaces tab, and then select `Create codespace on tutorial_3`
+The webpage will reload. Confirm that the `tutorial_4` branch is loaded. Select the green <> Code icon, the Codespaces tab, and then select `Create codespace on tutorial_4`.
 
 ![Codespace launch](images/launch_codespace.png)
 
@@ -62,20 +60,45 @@ The webpage will reload. Confirm that the `tutorial_3` branch is loaded. Select 
 
 <br>
 
-You will notice that we are at a checkpoint from our progress made in tutorial 2. Our nextflow pipeline is already downloaded along with the incorporation of our `FASTP` module. 
+You will notice that we are at a checkpoint from our progress made up to the end of `tutorial 3`. Our nextflow pipeline is already downloaded along with the incorporation of the `FASTP` module, the `FASTQC` module aliases, `FASTQC_RAW` and `FASTQC_TRIMMED`, and the `READITANDKEEP` module. 
 
-![Tutorial 2 checkpoint](images/tutorial_2_cp.png)
+![Tutorial 3 checkpoint](images/tutorial_3_cp.png)
 
-In addition, the tutorial 2 challenge has also been completed with the use of `module aliases` to use the `FASTQC` module twice, both on our raw and trimmed reads. 
+In addition, I've also added a component covered in the `tutorial 3 challenge`, which is a custom config file that specifies our `params.reference`. First, you may notice we used to have our `params.reference` specified in the `nextflow.config` file, as such: 
 
-![Module alias](images/module_alias.png)
+![nextflow.config prior](images/nextflow_config_prior.png)
 
-If you want to learn more about `module aliases`, work through the self-guided challenge, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_2_challenge#challenge-adding-a-module-alias), on branch `tutorial_2_challenge`. 
+But in the current state of the pipeline, this line:
+
+```
+reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"
+```
+
+has been removed from the `nextflow.config` file:
 
 
-# Part I: Creating a nextflow module from an nf-core starter template
+![nextflow.config current](images/nextflow_config_current.png)
 
-### Install the module 
+
+And instead, has been added to a custom config file called `training.config`, stored in `launchDir/custom_configs/training.config`:
+
+![training.config](images/training.config.png)
+
+
+In addition, the `run_nextflow_analysis.sh` script has been updated with a `-c` flag to incorporate this custom config into our nextflow pipeline runs. Seem more, [here](https://docs.seqera.io/nextflow/config).
+
+![-c flag](images/c_flag.png)
+
+So that when we now launch our nextflow pipeline, we can see that this custom config file in detected, and the `params.reference` is now incorporated into the pipeline via the `training.config` file.  
+
+![Custom config detect](images/config_detect.png)
+
+I encourage you to work through `tutorial_challenge_3` to learn more about the flexibility of config files and nextflow's built-in prioritization of these files. Access the branch for `tutorial_3_challenge`, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_3_challenge), and start the challenge, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_3_challenge#challenge-exploring-the-priority-of-nextflow-config-files).
+
+
+# Part I: Installing and editing two nextflow modules from nf-core CLI 
+
+### Install both `BWAMEM2_INDEX` and `BWAMEM2_MEM` modules 
 
 Remember, nf-core CLI commands are meant to function inside of your pipeline directory. So change into your pipeline directory:
 
@@ -90,178 +113,103 @@ So that we are currently working in the `/workspaces/mdhhs_nextflow_training/nf-
 Run the following command:
 
 ```
-nf-core modules
+nf-core modules install
 ```
 
-![nf-core modules](images/nfcore_modules.png)
+Start by installing the `bwamem2/index` module:
 
-Recall in tutorial 2 that we ran the `nf-core modules install` command to retrieve an already-established module (`FASTP`). Here, we are going to use the `create` command to create a module from a starter template:
+![bwamem2_index install](images/bwamem2_index_install.png)
+
+You'll see the following if successfully installed:
+
+![bwamem2_index module](images/bwamem2_index_module.png)
+
+Repeat this process to install the `bwamem2/mem` module:
 
 ```
-nf-core modules create
+nf-core modules install
 ```
 
-![module create](images/module_create.png)
+Select the `bwamem2/mem` module:
 
-- You'll be prompted 5 times
-    - Name of tool/subtool: `readitandkeep`
-        - Keep it lowercase and no punctuation between words. It's an nf-core standard
-    - Do you want to enter a different Bioconda package name? [y/n]: `n`
-        - We are using containers, not Bioconda
-    - GitHub Username: (@author): @`enter your GitHub username here`
-        - You need the `@` symbol at the beginning
-    - ? Process resource label: `process_low`
-        - defining compute resources
-    - Will the module require a meta map of sample information? [y/n] (y): `y`
-        - linking our sample ID to our FASTQ read pair files
+![bwamem2_mem install](images/bwamem2_mem_install.png)
 
+You'll see the following if successfully installed:
 
-Some background- we will be "scrubbing" our reads. This refers to a process where we take raw reads and remove human reads from the FASTQ files. This allows us to upload our FASTQ files to a public repository while ensuring that PII/PHI is protected. To achieve this, we are making use a of a bioinformatics tool called [readItAndKeep](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep). This tool works by mapping the raw reads to the viral genome, and keeping only what successfully maps. 
-
-A more common strategy is to map raw reads to the human genome, and discard reads that map. See [here](https://pmc.ncbi.nlm.nih.gov/articles/PMC12664888/) for a benchmarking study on human read scrubbing tools. However, this method is much more computationally intensive and requires significant storage for the human reference genome. We'll stick with the readItAndKeep strategy since we're working in codespaces with limited compute power and storage.
-
-
-### View the readItAndKeep main.nf file
-
-Open the `main.nf` file for the readitandkeep module
-
-![main.nf file 1](images/main_1.png)
-
-Notice how this module was installed into the `modules/local/` directory as opposed to the `modules/nf-core/` directory. However, we notice that this takes a similar structure as the `FASTP` module we looked at tutorial 2. 
-
-- We see the:
-    - `process READITANDKEEP` line which encapsulates our process script
-    - Process `directives`
-        - `meta.id` tag
-        - `label` defining compute resources in `conf/base.config`
-        - The `container` which will point to the actual source containing the software code to run our bioinformatic tool
-
-<br>
-
-![main.nf file 2](images/main_2.png)
-
-
-- Moving along we see:
-    - `input:` section
-        - This is where we will add our required inputs to run the `readItAndKeep` tool
-    - `output:` section
-        - This is where we will define our output files from the `readItAndKeep` tool
-    - `when:` section
-        - A conditional statement that can be used to define when we run the `readItAndKeep` tool
-        - But we will not make use of this in this tutorial series
-
-<br>
-
-![main.nf file 3](images/main_3.png)
-
-
-- Then we make it to the `script:` section:
-    - `def` arguments are provided
-        - recall that `args` can be defined as `ext.args` within the `conf/modules.config` file
-        - `prefix` is defaulted to be defined from `meta.id`, aka sample ID
-    - The script block
-        - our """quote sandwich"""
-        - defaults to being interpreted as a bash shell script
-        - remember, `$` defines a nextflow variable
-            - which is defined prior in the process script via `inputs` and `def` arguments
-
-<br>
-
-![main.nf file 4](images/main_4.png)
-
-
-Finally, we make it to the `stub` section, which will ignore in this tutorial series, but see more [here](https://docs.seqera.io/nextflow/process#stub), if interested. 
+![bwamem2_mem module](images/bwamem2_mem_module.png)
 
 <br>
 
 > [!Note]
-> The nf-core template also provides `TODO` list of instructions. <br>
-> They help to guide you through process script edits <br>
+> For both `bwamem2/index` and `bwamem2/mem`, take note of the `include` line after successful installation. <brb>
+> Remember, we need to use these lines to import the modules into our `workflows/myfirstpipeline.nf` script. 
 
 <br>
 
-# Part II: Editing a new module
+Recall, `bwa` is the [Burrow-Wheeler Aligner](https://github.com/lh3/BWA), an algorithm for aligning reads to a reference genome. This bioinformatics tool works in two steps.
 
-Let's begin to incorporate the `READITANDKEEP` module into our overall pipeline. Recall this image from tutorial 2?:
+1) Index the reference genome
+    - It is computationally time consuming to scan the entire genome for every read in a sample in a linear fashion.
+    - Indexing is a way to transform the genome into a readily searchable, navigational format, akin to a book index, vastly improving speed and efficiency of the alignment step.
+2) Alignment of sample reads to the (indexed) reference genome 
+    - Here, we are matching sequence reads to their location on the reference genome.
+    - Remember, we have ~150 bp reads generated from Illumina sequencing and a ~16,000 bp measles reference genome
+        - With alignment, we're basically asking: where did this read originate from within the genome?
+    - You may see the term alignment used interchangeably with mapping. 
 
-![module incorporate](images/module_incorporate.png)
 
-These are the steps, both required (purple) and optional (green), needed to successfully incorporate a new module/subworkflow. 
+In addition, [`bwa-mem2`](https://github.com/bwa-mem2/bwa-mem2) is a more computationally efficient tool compared to `bwa-mem`
 
+Remember this image from tutorial 3?
 
-- We  will need to edit the following in this tutorial: 
-    - `modules/local/readitandkeep/main.nf`
-        - Note, `readitandkeep` was abbreviated to `riak` in the image, above
-    - To incorporate a reference fasta file into our pipeline.
-        - `assets/`
-        - `nextflow.config`
-    - `workflows/myfirstpipeline.nf`
-    
+![module incorporation](images/module_incorporation.png)
 
-### Editing the READITANDKEEP module process script: defining directives
+We will rinse and repeat these steps for both `BWAMEM2_INDEX` and `BWAMEM2_MEM`.
 
-We first start by editing the `main.nf` file part of the `READITANDKEEP` module. See all this extra help information at the beginning of the file? 
-
-![main.nf edit 1](images/main_edit_1.png)
-
-Feel free to read it on your own time for guidance but for now, let's get rid of it just to keep things tidy:
-
-![main.nf edit 2](images/main_edit_2.png)
-
-- Next, we see: 
-    - The `process READITANDKEEP` line
-        - This stays as is
-    - The `meta.id` tag
-        - We will also keep this as is because we want to label our sample ID to the process task in Nextflow execution reports and logs.
-    - The `process_low` label
-        - This was defined when we created the module
+For the purposes of this tutorial, we will edit the following files:
+- `main.nf`
+    - the process scripts for both `BWAMEM2_INDEX` and `BWAMEM2_MEM` contained with `modules/nf-core/bwamem2/index` and `modules/nf-core/bwamem2/mem`, respectively. 
+- `conf/modules.config`
+    - for `BWAMEM2_MEM` only
+- `workflows/myfirstpipeline.nf`
+    - to implement the new modules into our pipeline workflow
 
 <br>
 
-- Then we get to the container directive. Again, this template comes as a Groovy conditional `if-else` statement that basically says:
-    - `if` our `-profile` parameter is defined as `apptainer` or `singularity`, then (defined in Groovy by the `?` character) use the singularity container found within the `https://depot.galaxyproject.org/singularity/` repository
-    - `else` (defined in Groovy by the `:` character), use the docker container found within the `quay.io/biocontainers/` repository
+### Edit the `BWAMEM2_INDEX` main.nf file
 
+Let's start with editing the `main.nf` process script for `BWAMEM2_INDEX`(`modules/nf-core/bwamem2/index/main.nf`). See the nf-core documentation [here](https://nf-co.re/modules/bwamem2_index/):
 
-[Apptainer](https://apptainer.org/) (formerly known as singularity) and [Docker](https://www.docker.com/) are the most commonly used container runtimes, and that's why it's built into the nf-core module template by default. However, nextflow supports various other [container runtimes](https://docs.seqera.io/nextflow/container#container-runtimes).
+![main.nf bwamem2 index before](images/index_main_before.png)
 
-In addition, even though the nf-core template suggests to source containers from `https://depot.galaxyproject.org/singularity` and `quay.io/biocontainers/` for `apptainer/singularity` and `docker` containers, respectively, you can source your container from various container repositories ...
+This is a relatively simple module that only needs the reference fasta file as input. 
 
-- Including:
-    - [quay.io](https://quay.io/)
-    - [docker hub](https://hub.docker.com/)
-    - [GitHub container registry (ghcr.io)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
-    - [Singularity galaxy depot](https://depot.galaxyproject.org/singularity/)
-    - [AWS Elastic Container Registry](https://aws.amazon.com/ecr/)
-    - [Google Artifact Registry](https://docs.cloud.google.com/artifact-registry/docs)
-    - [Azure Container Registry](https://azure.microsoft.com/en-us/products/container-registry)
-
-A very useful Docker container registry for the public health community is the [StaPH-B docker hub](https://hub.docker.com/u/staphb). Here, members of the public health community keep commonly used tools in public health bioinformatics updated in freely available containers. 
-
-Defining containers in the container directive is generally similar across container registries. So I will just focus on `quay.io` as an example.
-
-- container specification for `quay.io` takes the form of:
-    - `quay.io`/`username`/`tool`:`version`
-        - and more generally, `URL`/`username`/`tool`:`version`
-
-
-So, for example, click on this [link](https://quay.io/repository/biocontainers/read-it-and-keep?tab=tags) for the quay.io/biocontainer repository for `readItAndKeep`, the tool that we are trying to incorporate in this tutorial. 
-
-> [!Note]
-> I refer to it as `READITANDKEEP` when speaking about the nextflow module <br>
-> I refer to it as `readItAndKeep` when speaking about the tool itself, as it's the executable command <br>
-> But also notice that in the container repositories, it's written as `read-it-and-keep` <br>
-
-Let's say I want to use the `0.3.0--h5ca1c30_3` tag in my `READITANDKEEP` module process script, how would I define this container from `quay.io`?
-
-<br>
+Notice the [memory](https://docs.seqera.io/nextflow/reference/process/directives/memory) directive at the top of the file? This is a fancy way to scale computing resources to the size of the input reference file. 
 
 <details>
-<summary>Reveal solution, here</summary>
+<summary>If interested, reveal more information about this memory directive line</summary>
 
 <br>
 
-`quay.io/biocontainers/read-it-and-keep:0.3.0--h5ca1c30_3`
+In contrast to `conf/base.config`, we can use this `memory` directive to explicitly state the resources we want within the process script. 
+
+This can be set simply as `memory 200.MB`, for example. But here, there's additional components to the line: 
+
+```
+memory { 280.MB * Math.ceil(fasta.size() / 10000000) * task.attempt * (fasta.endsWith("gz") ? 4 : 1) }
+```
+
+in this nextflow template. Let's break this down. 
+
+- First, a base memory of `280.MB` is set
+    - Then this is multiplied by various factors to scale with the size of the reference file 
+- The fasta file size is divided by 10 million and then `Math.ceil` rounds a floating-point number upward to the nearest integer
+    - The measles genome is small, ~16,000 bps and genome size $\approx$ fasta file size. So 16,000/10,000,000 = 0.0016. Math.ceil(0.0016) = 1. No memory is scaled here because of small genome size
+    - If this was a larger genome, like *Candida auris*, the scaling would be: Math.ceil(fasta.size(12,400,000) / 10000000) = Math.ceil(1.24) = 2.  
+- If this module failed and you set parameters to retry the task, the memory would scale with retry attempt number. Indexing could fail because of a large genome size.
+    - Retries can be set via `maxRetries` and `errorStrategy 'retry'` directives (see [here](https://docs.seqera.io/nextflow/reference/process/directives/max-retries)) that can be set within the process script or globally within the `nextflow.config` file.
+- Finally, the memory can scale 4-fold with an `if-else` statement that looks for a gzipped file
+    - `if` the reference fasta file is gzipped, multiply the memory by 4, `else` multiply by 1. 
 
 <br>
 
@@ -269,104 +217,64 @@ Let's say I want to use the `0.3.0--h5ca1c30_3` tag in my `READITANDKEEP` module
 
 <br>
 
-Now, let's move to the `apptainer/singularity` container definition. See if you can find the `readItAndKeep` container within the singularity galaxy depot, [here](https://depot.galaxyproject.org/singularity/):
+Perform the following edits:
 
-
-![Singularity depot](images/singularity_depot.png)
-
-
-Here it is!
-
-![Singularity depot](images/singularity_depot_riak.png)
-
-
-So via the nf-core template provided for defining `apptainer/singularity` containers, we can define our container for `readItAndKeep` like so: 
-- `URL`/`username`/`tool`:`version`
-- `https://depot.galaxyproject.org/singularity/read-it-and-keep:0.3.0--h5ca1c30_3`
-
-
-Okay with this information, update your container section within the `READITANDKEEP` process script `main.nf` file:
-
-```
-container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/read-it-and-keep:0.3.0--h5ca1c30_3':
-        'quay.io/biocontainers/read-it-and-keep:0.3.0--h5ca1c30_3' }"
-```
-
-![Containers](images/containers.png)
-
-
-I do want to note that the [GitHub repo](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep) for `readItAndKeep` provides instructions for using their Docker container from the GitHub container registry (`ghcr`):
-
-![riak ghcr](images/riak_ghcr.png)
-
-> [!Note]
-> You may be tempted to try to use that container definition (`ghcr.io/globalpathogenanalysisservice/read-it-and-keep:latest`) in your `READITANDKEEP` process script for the docker container definition. <br>
-> But, for reasons beyond the scope of this tutorial series, you would run into issues trying to execute the `readItAndKeep` script with this specific container. <br>
-> The crux of it is that even though *you can* source from various container registries, some container registries are built specifically with workflow managers in mind, and others were not, which can cause extra complications in script execution. <br>
-> That's why we typically stick with containers sourced from `quay.io/biocontainers` and `https://depot.galaxyproject.org/singularity/`, because these were built specifically to seamlessly incorporate with workflow managers, including nextflow. <br>
-> Containers sourced from [StaPH-B docker hub](https://hub.docker.com/u/staphb) work fine as well.
+- Remove the `tuple (meta),` part from the `input:` section
+    - We would need this if we were working with a more complicated pipeline with multiple references
+- Remove the `tuple (meta),` part from the `output:` section and edit `path("bwamem2")` to `path("ref_index")`
+    - Again, we would need this if we were working with a more complicated pipeline with multiple references
+    - In addition, we need the output path name (`ref_index`) to match what we declare in the `script:` block
+    - Note that the `emit` name is `index`
+- Change `mkdir bwamem2` to `mkdir ref_index` in the `script:` block
+    - By default, our results directory for this process is already named `results/bwamem2/` and this step is trying to make another directory within this out directory
+    - So instead of `results/bwamem2/bwamem2`, it will be `results/bwamem2/ref_index`
+- Change `-p bwamem2/${prefix}` to `-p ref_index/${prefix}`in the `script:` block
+    - Needs to match the directory name that we created in the beginning of the `script:` block
 
 <br>
 
-### Editing the READITANDKEEP module process script: defining inputs
+![main.nf bwamem2 index after](images/index_main_after.png)
 
-<br>
-
-
-Now we make it to the `input:` section:
-
-![Input](images/input_section.png)
-
-But before we update this section, let's play with the `readItAndKeep` tool outside of nextflow to get a better understanding of how it functions. 
-
-From your `/workspaces/mdhhs_nextflow_training` directory, run the following script that has been provided for you: 
-
+Save the file:
 
 ```
-source install_readitandkeep.sh  
+ctrl+s
 ```
 
-> [!Note]
-> We need to use `source` instead of `bash` in order to modify our current shell. <br>
-> The script has a `export PATH="$PATH:$HOME/.local/bin"` command therein. <br>
-> If we ran `bash install_readitandkeep.sh`, it runs in a new shell and therefore, <br>
-> we would not update our `$PATH` variable in our current running shell. <br>
+Let's review a couple concepts before we continue.
 
-- Feel free to look at this script in more detail. This script does 4 things:
-    - Creates a new directory called `scrubber_test`
-    - Downloads, installs, and makes `readItAndKeep` an executable command
-    - Obtains 3 reference files for measles: Genotypes A, B3, and D8
-        - From [measeq](https://github.com/phac-nml/measeq), a nextflow pipeline for analyzing measles samples created by the Public Health Agency of Canada - National Microbiology Branch.
-    - Copies FASTQ files from a measles sample (stored as backup in the `misc/` directory) into the `scrubber_test/` directory
-
-All relevant files have now been placed in the `scrubber_test/` directory
-
-
-![install riak](images/install_riak.png)
-
-Once the script completes, you should now be within the `scrubber_test/` directory. Take a moment to review the [README.md](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep#read-it-and-keep) section for `readItAndKeep` to locate the basic usage for this tool.
+I mentioned that the default directory for this process is already named `results/bwamem2/`. Can you recall where/how this was set as default?
 
 <details>
 <summary>Reveal solution, here</summary>
 
 <br>
 
-![riak usage](images/riak_usage.png)
+From `conf/modules.config` via:
 
+![default output dir](images/default_output.png)
 
-- For illumina reads, We see that basic usage requires 5 components:
-    - the `readItAndKeep` executable
-    - a `reference fasta` file
-    - your forward read `FASTQ` file
-    - your reverse read `FASTQ` file
-    - and an `output prefix`
+Specifically, this line:
+
+```
+path: { "${params.outdir}/${task.process.tokenize(':')[-1].tokenize('_')[0].toLowerCase()}" },
+```
+
+- `params.outdir` is the parameter that we set to `--outdir` in the `nextflow run` command line, which is `results`
+- `process.tokenize(':')[-1]` find the process, `BWAMEM2_INDEX`, splits it by the `:` delimiter, and then selects the last element in the list (`-1`)
+    - Take a look at the image, below. This is what it will look like when we eventually run our pipeline. The general format for each process once launched is:
+    - `PIPELINE_NAME:WORKFLOW_NAME:MODULE_NAME` or in our case, `NFCORE_MYFIRSTPIPELINE:MYFIRSTPIPELINE:BWAMEM2_INDEX`
+    - Splitting this line by the `:` delimiter, [`NFCORE_MYFIRSTPIPELINE`, `MYFIRSTPIPELINE`, `BWAMEM2_INDEX`] and selecting the last element gives us `BWAMEM2_INDEX`
+- `.tokenize('_')[0]` splits the process, `BWAMEM2_INDEX`, by the `_` delimiter, and then selects the first element (`0`) in the list
+    - In this case, [`BWAMEM2`, `INDEX`], and [`0`] selects `BWAMEM2 `
+- Finally, `.toLowerCase()` coverts a string to lowercase
+    - `BWAMEM2` > `bwamem2`
+- Putting it all together, the default output directory path for `BWAMEM2_INDEX` is `launchDir/results/bwamem2`
 
 <br>
 
-```
-readItAndKeep --ref_fasta ref_genome.fasta --reads1 reads1.fq.gz --reads2 reads2.fq.gz -o out
-```
+![Process delimiters](images/process_delim.png)
+
 
 <br>
 
@@ -374,437 +282,359 @@ readItAndKeep --ref_fasta ref_genome.fasta --reads1 reads1.fq.gz --reads2 reads2
 
 <br>
 
-To view this in our VS code terminal, run the following:
-
-
-```
-readItAndKeep --help
-```
-
-![riak help](images/riak_help.png)
-
-Again, we see the `readItAndKeep` executable along with the 4 required inputs. 
-
-Now, a quick background on measles. There are 8 measles virus clades (A–H) and 24 subclades, referred to as [genotypes](https://iris.who.int/bitstream/handle/10665/241889/WER8709_73-80.PDF?sequence=1). Only two of these genotypes, B3 and D8, have been detected since [2021](https://nextstrain.org/measles/genome/global). And every measles vaccine is derived from [genotype A](https://journals.asm.org/doi/10.1128/jcm.01879-16).
-
-These three reference fastas for genotypes A (`FJ211590.fasta`), B3 (`MK513622.1.reference.fasta`), and D8 (`MH356245.1.reference.fasta`) have been provided because there may be times where we do not know the genotype of our measles sample. So how do we choose the best reference fasta file for our mapping step? Well, we can try to run the script using all possible reference files to deduce the best reference match by most reads mapped, which would then be the most likely genotype for our sample. 
-
-Let's go ahead and run the `readItAndKeep` script, first using the genotype A reference file:
-
-
-```
-readItAndKeep --ref_fasta FJ211590.fasta --reads1 SRR39817210_R1_001.fastq.gz --reads2 SRR39817210_R2_001.fastq.gz --outprefix SRR39817210 > genotype_A_results.txt
-```
-
-We added one additional component to our tool run command, the `> genotype_A_results.txt` to redirect our results to a `txt` file. 
-
-![riak output](images/riak_output.png)
-
-
-- You will notice two main outputs
-    - Our "scrubbed" reads as FASTQ files, `SRR39817210.reads_1.fastq.gz` and `SRR39817210.reads_2.fastq.gz`
-        - named by sample ID via the `--outprefix` parameter
-    - A `txt` file containing the scrubbed reads results
-        - In this run, we see that the original FASTQ files had 324,488 reads
-        - Of those, 273,550 were kept, aka mapped to the genotype A reference fasta
-
-
-Go ahead and run the following commands to rerun `readItAndKeep` with the genotype B3 reference fasta file: 
-
-```
-readItAndKeep --ref_fasta MK513622.1.reference.fasta --reads1 SRR39817210_R1_001.fastq.gz --reads2 SRR39817210_R2_001.fastq.gz --outprefix SRR39817210 > genotype_B3_results.txt
-```
-
-And with the genotype D8 reference fasta file: 
-
-
-```
-readItAndKeep --ref_fasta MH356245.1.reference.fasta --reads1 SRR39817210_R1_001.fastq.gz --reads2 SRR39817210_R2_001.fastq.gz --outprefix SRR39817210 > genotype_D8_results.txt
-```
-
-Determine the most likely genotype for our measles sample.
-
-<br>
+Second, we will need to use the `ref_index` output as input into the `BWAMEM2_MEM` module. Can you recall how we can capture this `ref_index` output channel from the `BWAMEM2_INDEX` module within the workflow script (`workflow/myfirstpipeline.nf`)?
 
 <details>
 <summary>Reveal solution, here</summary>
 
 <br>
 
-![riak genotype](images/riak_genotype.png)
+`MODULE.out.emitName`
 
-It seems to be genotype D8, since it has the most mapped reads. We will use this knowledge to incorporate the D8 genotype reference fasta file into our nextflow pipeline. 
+In our case, a shortened form of our process script looks like:
+
+```
+process BWAMEM2_INDEX {
+
+output:
+path("ref_index"), emit: index
+
+}
+```
+
+So the output channel would be: `BWAMEM2_INDEX.out.index`
 
 <br>
+
+We will need this in a bit when we edit out workflow script. 
 
 </details>
 
 <br>
 
+### Edit the `BWAMEM2_MEM` main.nf file 
 
-Okay great! You just successfully ran `readItAndKeep`. But remember, we're here to nextflowify! Let's translate what we just did to complete the rest of the our `READITANDKEEP` process script `main.nf` file: 
 
-Return to the `main.nf` file for the `READITANDKEEP` module and place this in the `input:` section:
+Alright, let's continue with edits to the `main.nf` process script for `BWAMEM2_MEM` (`modules/nf-core/bwamem2/mem/main.nf`). First, let's take a look at the nf-core documentation for [bwamem2_mem](https://nf-co.re/modules/bwamem2_mem/).
 
-```
-tuple val(meta), path(reads)
-path(reference)
-```
 
-![riak input](images/riak_input.png)
+![bwamem2 mem nf-core](images/bwamem2_nfcore.png)
 
-- Here you see:
-    - We have our `tuple` defining a couple of qualifiers
-        - `val` defining our `meta` map
-        - `path` defining our read pair files
-        - the input for this in our pipleine script (`workflows/myfirstpipeline.nf`) will be `ch_samplesheet`
-    - We have our reference file now included as input
-        - `path` defining our reference
-        - as you'll see later in this tutorial, this reference file (the D8 genotype) will be placed within the `assets` directory and its path defined in the `nextflow.config` file
+We see that we have four inputs:
+- Our FASTQ files
+    - These will be our trimmed reads
+- The indexed reference genome
+    - Created from the `BWAMEM2_INDEX` module
+- The reference genome in fasta format
+    - Already established in our pipeline as `ch_reference`
+- A boolean input 
+    - Runs either samtools `sort` (true) or `view` (false) post-alignment
 
-<br>
 
-I hope the `meta` concept is clicking now but I want to briefly review it again.
+The edits to the `main.nf` process script for `BWAMEM2_MEM` are as follows:
 
-Recall in tutorial 2 when we used the `view()` operator to view the `ch_samplesheet` created from our samplesheet input file. `ch_samplesheet.view()` output:
+![bwamem2 mem before](images/bwamem2_before.png)
 
-```
-[[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/reads/SRR39817210_R1_001.fastq.gz, /workspaces/mdhhs_nextflow_training/reads/SRR39817210_R2_001.fastq.gz]]
-```
+- Change the label directive from `process_high` to `process_low`
+- Remove `tuple val(meta2),` from the `path(index)` input
+- Remove `tuple val(meta3),` from the `path(fasta)` input
 
-This is the tuple that is in the first line of our input (`tuple val(meta) path (reads)`) and is equivalent in conceptual assignment as follows:
+![bwamem2 mem after](images/bwamem2_after.png)
+
+Save the file:
 
 ```
-meta  = [id: 'SRR39817210', single_end: false]
-reads = [
-    file('SRR39817210_R1_001.fastq.gz'),
-    file('SRR39817210_R2_001.fastq.gz')
-]
+ctrl+s
 ```
 
-- `ch_samplesheet` is a tuple. So when used as input into a process script
-    - We can access the elements of the `meta` map as follows:
-        - `meta.id`: retrieves the sample ID from the map
-        - `meta.single_end`: retrieves the single-end flag, `false` in our case
-    - We can access the elements of `reads` containing the FASTQ file paths as follows:
-        - `{reads[0]}` can access the forward read file
-        - `{reads[1]}` can access the reverse read file
-
-<br>
-
-For more information on meta maps, see [here](https://nf-co.re/docs/developing/components/meta-map)
-
-Okay, inputs are all set! 
-
-> [!NOTE]
-> The names in the `input:` block is just intuitive. `meta` for metadata, `reads` for FASTQ reads, and `reference` for the reference fasta file. <br>
-> But, we could name these whatever we want. We're just creating the variables that we can then reference in the `script:` block section. <br>
-
-### Editing the READITANDKEEP module process script: defining outputs
-
-<br>
-
-The template for the `output:` section looks as follows:
-
-![riak output section](images/riak_output_section.png)
-
-Let's recall what the outputs were when we just ran `readItAndKeep`:
-- Two scrubbed `FASTQ` files (`SAMPLEID.reads_1.fastq.gz` and `SAMPLEID.reads_2.fastq.gz`)
-- The `txt` file with the read scrubbing summary
-
-We need to define these two outputs in order for them to populate in our results directory. 
-
-```
-tuple val(meta), path('*.fastq.gz')
-path('*_scrubbed_results.txt')
-```
-    
-![riak output edits](images/riak_output_edits.png)
-
-
-- The tuple output for the reads maintains our `meta` map to `reads` connection in the event that we wanted to use these reads in a downstream process
-- The path qualifier for the `txt` summary file tells Nextflow this should be handled as a path (includes both directory paths and files)
-    - This ensures that our results directory in populated with both the scrubbed reads `FASTQ` files and the `SAMPLEID_scrubbed_results.txt` file
-
- 
-Also note that the `readitandkeep` within the `eval("readitandkeep --version")` block of the following line:
-
-```    
-tuple val("${task.process}"), val('readitandkeep'), eval("readitandkeep --version"), topic: versions, emit: versions_readitandkeep
-```
-
-Needs to be changed to `eval("readItAndKeep --version")`. This is because the executable for this bioinformatic tool is `readItAndKeep`, not `readitandkeep`. And this section of the script is trying to obtain the version of the tool. 
-
-There is a file in our `results/pipeline_info/` directory named `nf_core_myfirstpipeline_software_mqc_versions.yml` that stores all of our tools and tool versions.   
-
-
-
-<br>
-
-### Editing the READITANDKEEP module process script: defining the script block
-
-<br>
-
-We've made it to the script block:
-
-
-![riak script section](images/riak_script_section.png)
-
-
-We're going to keep the first two lines as is: 
+Let's take a minute to discuss the contents in the `script:` block. Let's start with all the `definition` lines:
 
 ```
 def args = task.ext.args ?: ''
+def args2 = task.ext.args2 ?: ''
 def prefix = task.ext.prefix ?: "${meta.id}"
+def samtools_command = sort_bam ? 'sort' : 'view'
+
+def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+def extension_matcher = (args2 =~ extension_pattern)
+def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
+def reference = fasta && extension == "cram" ? "--reference ${fasta}" : ""
+if (!fasta && extension == "cram") {
+    error("Fasta reference is required for CRAM output")
+}
 ```
 
-Recall that `args` can be set via the `ext.args` within the `conf/modules.config` file, as we did in tutorial 2.
-- The `readItAndKeep` [GitHub repo](https://github.com/GlobalPathogenAnalysisService/read-it-and-keep#usage) does have optional arguments that you can add
-- But we will not be adding arguments to the `conf/modules.config` file in this tutorial
+We start with two `def args` lines, `def args` and `def args2`. There are two because two tools are run within the shell script, `bwa-mem2` and `samtools`, and `${args}` and `${args2}` define tool parameters for  `bwa-mem2` and `samtools`, respectively. 
 
-And `prefix`, by default, is being defined as our `meta.id`, which is accessing one element within our `meta` map.
-- This element is the sample ID
+Next is the `def prefix` line, which we have seen before. We will keep this as default, which is `${meta.id}`, aka the sample ID. 
 
-
-Replace what's currently within the """quote sandwich""" with the following:
+The `def samtools_command` line is connected to the 4th input within the `input:` block. Recall that the `val sort_bam` input will be boolean, `true or false`. So the following line:
 
 ```
-readItAndKeep \\
-    --ref_fasta $reference \\
-    --reads1 ${reads[0]} \\
-    --reads2 ${reads[1]} \\
-    --outprefix $prefix \\
-    $args \\
-    > ${prefix}_scrubbed_results.txt
+def samtools_command = sort_bam ? 'sort' : 'view'
 ```
 
-![riak script edits](images/riak_script_edits.png)
+States the following: `if` sort_bam = `true`, then the samtools command will be `sort`, `else` sort_bam = `false`, then the samtools command will be `view`.
+
+The next three lines are interconnected. Let's start with the first of these three lines: 
+
+```
+def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+```    
+
+Here, we are defining a regular expression (regex) pattern and storing it in a variable named `extension_pattern`. The regex pattern will be `--output-fmt` or (`|`) `-O`, followed by whitespace `\s` and a non-whitespace value `\S`.
+
+`--output-fmt` (or short form of the same option, `-O`) is an option shared by various samtools subcommands. It's a way to specify output format as `SAM` (human-readable alignment file), `BAM` (non-human-readable compressed version of `SAM`), or `CRAM` (non-human-readable highly compressed version of SAM. Requires reference fasta file). The `+\s+(\S+)` part of the expression pattern, `(--output-fmt|-O)+\s+(\S+)`, is a generic way to grab whatever text is contained after the `--output-fmt` or `-O` option.  
+
+In the second line of this three line combination: 
+
+```
+def extension_matcher = (args2 =~ extension_pattern)
+```
+
+=~ creates a matcher object that can find matches in a string. It's looking for the `extension_pattern` in the `args2` section.
+
+For example, if `args2 = '-@ 4 -O cram'`, then args2 =~ extension_pattern would find the matching pattern `-O cram`
+
+<details>
+<summary>Can you recall where we will define args2?</summary>
+
+In the `conf/modules.config` file. We'll get to this in a second!
+
+</details>
+
+<br>
+
+In the last line of this three line combination:
+
+```
+def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
+```
+
+`if` extension_matcher.getCount() > 0, a match exists
+`then` access the first match `extension_matcher[0]` and then access the match at index 2 of that match, `extension_matcher[0][2]`. And then finally, `.toLowerCase()` would convert the match to lowercase.
+`else`, default to `bam` if no match exists. 
+
+So let's visualize this from the top. Let's say hypothetically that my `ext.args2` for the `BWAMEM2_MEM` module looks as follows:
+
+```
+ext.args2 = '-f 3 -O cram'
+```
+
+Then with `def extension_pattern` still set as `/(--output-fmt|-O)+\s+(\S+)/`, `def extension_matcher` = (args2 =~ extension_pattern) would output the following:
+
+```
+[-O cram, -O, cram]
+```
+
+The matcher produces a list-like result for each match. So let's break this down more:
 
 
-Notice how this is basically what we just did before to run the `readItAndKeep` tool. We have all the same required inputs defined in our script block. 
+```
+[
+    '-O cram',  // [0] Entire match
+    '-O',       // [1] First capture group
+    'cram'      // [2] Second capture group
+]
+```
 
-- We have: 
-    - `--ref_fasta` with `$reference` as the input
-        - `$reference` is a nextflow variable that we created within the `input:` section 
-    - `--reads1` with `${reads[0]}` as the input
-        - `$reads` is a nextflow variable that we created within the `input:` section
-        - and the `[0]` index captures the forward read
-    - `--reads2` with `${reads[1]}` as the input
-        - `$reads` is a nextflow variable that we created within the `input:` section 
-        - and the `[1]` index captures the reverse read
-    - `--outprefix` with `${prefix}` as the input
-        - `${prefix}` by default is defined as `${meta.id}` from the `def` line:   
-        - `def prefix = task.ext.prefix ?: "${meta.id}"`
-    - `$args` 
-        - references addtional optional arguments we may want to define in `conf/modules.config` and is defined from the `def` line:   
-        - `def args = task.ext.args ?: ''`
-    - And finally, here we redirect the output to a `txt` file: `> ${prefix}_scrubbed_results.txt`
-        - `${prefix}` captures different sample IDs and thus multiple `txt` file outputs if we had multiple samples
-        - Notice how the `_scrubbed_results.txt` is exactly what we defined in the `output:` section to capture this file output properly in our results directory
-        - Just `path('*.txt')` in the `output:` section would have been *fine*, but what if you had multiple `txt` file outputs from a tool and wanted to differentiate them for dowmstream processes?
- 
+So with ` def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`, a match would exist. `extension_matcher[0]` = `['-O cram', '-O', 'cram']` and then `extension_matcher[0][2]` = `cram`. `.toLowerCase()` would also result in `cram`, and this would utimately become the value of the `extension` variable. 
+
+
+Again, if there is no match, the file format defaults to `bam`, which is exactly what we want for the purposes of our pipeline.
+
+This `extension` variable is ultimately used as a nextflow variable in the shell script for samtools, where it defines the extension output name of the resulting file:
+
+```
+samtools ${samtools_command} ${args2} -@ ${task.cpus} ${reference} -o ${prefix}.${extension}
+```
+
+The last two parts prior to the shell script:
+
+```
+def reference = fasta && extension == "cram" ? "--reference ${fasta}" : ""
+if (!fasta && extension == "cram") {
+    error("Fasta reference is required for CRAM output")
+}
+```
+
+Is ensuring a reference fasta is available if `cram` output format is specified because that compression requries the reference fasta file. If not present, the script will error out.  
+
+
+We then make it to the shell script where our two tools are run: 
+
+```
+"""
+INDEX=`find -L ./ -name "*.amb" | sed 's/\\.amb\$//'`
+
+bwa-mem2 \\
+    mem \\
+    ${args} \\
+    -t ${task.cpus} \\
+    \$INDEX \\
+    ${reads} \\
+    | samtools ${samtools_command} ${args2} -@ ${task.cpus} ${reference} -o ${prefix}.${extension} -
+"""
+```
+
+The first line is finding the index file with extension `.amb` created from our `BWAMEM2_INDEX` step and removing the `.amb` extension from that file. Then, alignment is performed and piped into the `samtools` command to output the `BAM`, `SAM`, or `CRAM` file. Notice how the output files in the `output:` block are all optional since we are only able to output one of these file formats. 
+
+Notice the various variables that we defined in the `input:` block, and within the `script:` section. We have:
+- `${reads}` from the `path(reads)` input part of the `tuple val(meta), path(reads)` input
+- `${prefix}` from the `val(meta)` input part of the `tuple val(meta), path(reads)` input
+    - Since we do not define a `task.ext.prefix` in `def prefix = task.ext.prefix ?: "${meta.id}"`, `prefix` defaults to `${meta.id}`
+- `${args}` from `def args = task.ext.args ?: ''`
+    - provides tool parameters for `bwam-mem2 mem`
+- `${args2}` from `def args2 = task.ext.args ?: ''`
+    - provides tool parameters for `samtools`
+- `${task.cpus}` defined from the `label process_low` 
+    - directive which references computing resources defined in `conf/base.config`
+- `${samtools_command}` from the `def samtools_command = sort_bam ? 'sort' : 'view'`
+    - which is the 4th input within the `input:` block, either `true` or `false`
+- `${reference}` from `def reference = fasta && extension == "cram" ? "--reference ${fasta}" : ""`
+- `${extension}` from `def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`
+    - we will not define `--output-fmt` or `-O` in `${args2}` so this will default to `bam` extension
+- `\$INDEX` defined in the first line of the shell script.
 
 <br>
 
 > [!Note]
-> `reads[0]` (and `reads[1]`) need to be in curly brackets `${reads[0]}` (`${reads[1]}`) <br>
-> For example, if `$reads[0]` was used as input into the `--reads1` parameter, the script would read this as <br>
-> `--reads1 SRR39817210_R1_001.fastq.gz SRR39817210_R2_001.fastq.gz[0]` <br>
-> Without the curly brackets, the `[0]` is being treated as literal text, rather than as an index operation. The curly brackets are needed to capture the index.
-
-In general, curly brackets are needed to distinguish nextflow variables from general text. For example, when we define our `txt` file output, `${prefix}_scrubbed_results.txt`, the curly brackets are needed to maintain our nextflow variable `${prefix}` to incorporate unique sample IDs into the file name.
-
-Curly brackets are not needed with standalone variables, like `$reference`, `$prefix` (specified in the `--outprefix` parameter), and `$args`. But they also don't hurt to have them, if you want consistency. This is totally fine, too:
-
-![curly brackets](images/curly_brackets.png)
-
-
-Save the file:
-
-```
-ctrl + s
-```
-
-Righteous! We've completed the edits to the `modules/local/readitandkeep/main.nf` file. Next, we need to edit the remaining files to properly incorporate the `READITANDKEEP` module into our pipeline.
-
-# Part III: Incorporating a new module into the pipeline
-
-### Incorporate reference fasta in assets directory
-
-From our `projectDir`, `/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline`, make a directory within the `assets/` directory called `references/` and then change into the `references/` directory.
-
-```
-cd /workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline
-mkdir -p assets/references
-cd assets/references
-```
-
-![Reference directory](images/ref_dir.png)
-
-Retrieve the measles D8 genotype reference fasta file (`MH356245`) from the [phac-nml/measeq pipeline](https://github.com/phac-nml/measeq):
-
-```
-wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/D8/MH356245.1.reference.fasta
-```
-
-Great, our reference file for mapping has been obtained. 
-
-> [!Note]
-> In theory, we can add our reference file within a different directory.
-> But best standard practice in nextflow (and nf-core) is to place reference files and databases within the `assets/` directory.
-
-### Create a new parameter for the reference file in nextflow.config
-
-Open the `nexflow.config` file present in the `projectDir`.
-
-![nextflow.config](images/nextflow_config.png)
-
-Again, `nextflow.config` can be viewed as a global configuration file, setting configs for nextflow behavior and configs meant to be set for all pipelines. Imagine we were creating a measles nextflow pipeline with two workflows, one for Illumina reads and one for ONT reads, placing a reference file here makes this reference fasta easily accessible to all workflows. 
-- And we will place the path to our reference file with a new parameter called `reference` just below the `genome` parameter.
-
-> [!Note]
-> We are not making use of the `genome` parameter to provide our path to our reference file. <br>
-> nf-core has built-in support for reference genomes in `conf/igenomes.config` that crosschecks with the `genome` parameter during pipeline initialization. <br>
-> Our script would break trying to define our measles reference file path as the `genome` parameter so instead, we make a new parameter called `reference`. <br>
+> When a `script:` block is encapsulated in triple quotes (`"""`), then nextflow variables are specified with the dollar sign, `$`. <br>
+> And backslash escaping allows us to define shell/bash variables as `\$`, like it is for `\$INDEX`. <br>
+> `\$INDEX` is a shell variable because it was defined within the triple quote sandwich and not any time before within the process script. <br>
 
 <br>
 
+# Part II: Incorporating new modules into the pipeline
+
+### Edit the conf/modules.config file
+
+Open the `conf/modules.config` file:
+
+![module config before](images/modules_config_before.png)
+
+And just after the `withName: FASTQC_TRIMMED` block, add the following for `BWAMEM2_MEM`:
+
 ```
-reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"
+withName: BWAMEM2_MEM {
+    ext.args2 = '-b -f 3 -F 2048'
+    publishDir = [
+        path: { "$params.outdir/bwamem2/bam_file" }
+    ]
+}
 ```
 
-
-![nextflow.config edits](images/nextflow_config_edits.png)
-
-
-Again, `projectDir` is a nextflow varible that provides the path to where our pipeline code is. In our case, that's `/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline`. From there, we completed the path to the reference file that we just downloaded via `assets/references/MH356245.1.reference.fasta`.
-- `projectDir` makes it so that this variable becomes general use for anyone trying to run this pipeline on their computer. 
-- `projectDir` captures the full path from root, and that is different for people working on different computing systems.
-- Defining our `reference` parameter as `reference = "/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline/assets/references/MH356245.1.reference.fasta"` is not broadly applicable 
-- `reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"` is broadly applicable. 
+![module config after](images/modules_config_after.png)
 
 
-Now take a moment to look through the `nextflow.config` file. There's a lot discover here but I would like to cover two things:
 
-First point, take notice of the `params` block:
-
-
-![nextflow.config params](images/params.png)
-
-
-All parameters within this block can be accessed via declaration of `params.parameter_defined_in_block`.
-
-So for example, for our `reference` parameter that we just made, we can access it via:
-- `params.reference`
-- We will see this in a second when we edit our workflow script.
+<details>
+<summary>Can you recall what `ext.arg2` is for? </summary>
 
 <br>
 
-Sedcond, take a look near line 60:
+`ext.args2` is for samtools arguments. `ext.args` is for `bwa-mem2 mem` arguments, but we're leaving this blank and allowing default alignment options.
 
-![Base config import](images/base_import.png)
+<br>
 
-And near line 272:
+</details>
 
-![module config import](images/modules_import.png)
+<br>
 
-You can see that this `nextflow.config` file is pulling in various other config files, including `base.config` and `modules.config`. This is just part of the organizational style of nextflow. In theory, you could define all these components within the `nextflow.config` file, but breaking out these config files into specified files makes pipeline organization better. We're only working with one reference file for this tutorial but you could even make a [conf/reference.config](https://github.com/phac-nml/measeq/blob/main/conf/reference.config) file if you wanted to reference multiple measles genomes and then you would add the following line to your `nextflow.config` file:
-- `includeConfig 'conf/reference.config'`  
-
-Save the file:
-
-```
-ctrl + s
-```
-
-### Edit the workflow script to incorporate the READITANDKEEP module into our pipeline
-
-Open the `workflows/myfirstpipeline.nf` script:
-
-
-![Open workflow](images/workflow_open.png)
-
-
-Remember, our first step in this is to import the module. I'm going to import it after `FASTQC_RAW` because we are scrubbing our raw reads. Import order doesn't matter in terms of script functioning, it's purely organizational:
-
-```
-include { READITANDKEEP              } from '../modules/local/readitandkeep/main'
-```
+You can review all `samtools view` options, [here](https://www.htslib.org/doc/samtools-view.html). But briefly: 
+- `-b` is for output in `BAM` format. 
+- `-f` are required flags needed for output alignment. The decimal `3` represents the `0x1` and `0x2` flags seen [here](https://www.htslib.org/doc/samtools-flags.html)
+    - Meaning, aligned reads need both properties of being paired-end (`0x1`) and properly aligned (`0x2`) in order to be output to the `BAM` file
+- `-F` excludes alignments with the following flag. 
+    - The decimal number, `2048`, represents the flag, `0x800`, which means we are excluding supplementary alignments in our `BAM` file. 
+    - This represents additional parts of a read, split into parts, that align elsewhere in the reference
 
 <br>
 
 > [!Note]
-> All previous imports used the `../modules/nf-core/` path.
-> Here, we need to use the `../modules/local` path
+> `3` and `2048` are decimal representations of the hexidecimals that represent the samtools [flags](https://www.htslib.org/doc/samtools-flags.html). <br>
+> See additional discussion on this topic, [here](https://davetang.org/muse/2014/03/06/understanding-bam-flags/).
 
 <br>
 
-![Module import](images/module_import.png)
+### Edit the workflows/myfirstpipeline.nf file
 
-Our current workflow script looks as follows:
+Open the `workflows/myfirstpipeline.nf` file.
 
-![Workflow before](images/workflow_before.png)
+![workflow import before](images/workflow_import_before.png)
 
-We're going to add the following lines in the area indicated in the first arrow:
+And add the following lines to import the modules we just installed: 
 
 ```
-//Check for the existence of a reference file and create a channel
-def ch_reference = channel.value(file(params.reference, checkIfExists: true))
-ch_reference.view()
+include { BWAMEM2_INDEX              } from '../modules/nf-core/bwamem2/index/main'
+include { BWAMEM2_MEM                } from '../modules/nf-core/bwamem2/mem/main'
 ```
 
-**Note that `ch_trimmed_reads.view()` is also present so we'll be able to view the output channel from `FASTP`, as well.** 
+> [!Note]
+> Recall that `nf-core modules install` installs modules to the `modules/nf-core` directory, not `modules/local`.
 
-And place this code in the space of the second arrow:
+<br>
+
+![workflow import after](images/workflow_import_after.png)
+
+Then scroll down in the script until you reach the FASTQC_TRIMMED module:
+
+![workflow pipeline before](images/workflow_pipeline_before.png)
+
+And add the follwing: 
 
 ```
 //
-// MODULE: Run readItAndKeep for read scrubbing
+// MODULE: Run BWAMEM2 to index reference genome
 //
-READITANDKEEP(
-    ch_samplesheet
+BWAMEM2_INDEX (
     ch_reference
 )
+ch_index = BWAMEM2_INDEX.out.index
+
+//
+// MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
+//
+BWAMEM2_MEM (
+    ch_trimmed_reads,
+    ch_index,
+    ch_reference,
+    false
+)
+ch_aligned_bam = BWAMEM2_MEM.out.bam
 ```
 
-![Workflow after](images/workflow_after.png)
+![workflow pipeline after](images/workflow_pipeline_after.png)
 
-In the first code block, we are defining our `ch_reference`. Because we're pulling it directly from a directory within the pipeline and not capturing it as an out channel of a module (`MODULE.out.emit`), we have to define (`def`) it explicitly in the workflow. 
+`BWAMEM2_INDEX` contains one input, which is the channel, `ch_reference`, that we created for our reference fasta file. Then, after this module completes, the reference fasta file is indexed. We capture the output channel from the `BWAMEM2_INDEX` module via `BWAMEM2_INDEX.out.index` and renamed it to a more intuitive channel name, `ch_index`. This serves as the second input into the `BWAMEM2_MEM` module.
 
-- The first part of the definition is defining this as a [value channel](https://docs.seqera.io/nextflow/reference/stdlib-namespaces/channel#value), `channel.value`
-- The second part, `file()` is a function to obtain a reference file by name.
-    - This is where the `/path/to/the/reference/file.fa` is defined
-    - See [here](https://docs.seqera.io/nextflow/working-with-files) for more
-- The third part (and first input to the `file()` function), `params.reference` is referencing the `reference` parameter we created just before in `nextflow.config`
-    - In our current set up `params.reference` = `"${projectDir}/assets/references/MH356245.1.reference.fasta"`
-    - In reality, `params.reference` can be defined in various config files and this will be explored in the challenge section. 
-- The last part (and second input to the `file()` function), `checkIfExists: true` is a built-in [function](https://docs.seqera.io/nextflow/reference/stdlib-namespaces/channel#checkifexists) that will error out the pipeline if the reference file is not found
-    - Because we set it to `true`
+The `BWAMEM2_MEM` module contains the 4 expected inputs
+- Our `FASTP` trimmed reads with the meta map
+- The indexed reference genome output from `BWAMEM2_INDEX`
+- The original referecnce fasta file
+- And boolean input `false`
 
-We will view this channel we created with `ch_reference_view()` when the script runs.
 
-The second code block is explicitly invoking the `READITANDKEEP` module
-- Remember, the number of inputs here need to equal the number of inputs we defined in the `input:` section within the `modules/local/readitandkeep/main.nf` file
-- The first input is `ch_samplesheet`, a channel created from the `samplesheet.csv` input containing paths to our raw reads. The channel itself is a tuple in the form of: <br>
-`[[id:SRR39817210, single_end:false], [/workspaces/mdhhs_nextflow_training/reads/SRR39817210_R1_001.fastq.gz, /workspaces/mdhhs_nextflow_training/reads/SRR39817210_R2_001.fastq.gz]]`
-    - This is the `tuple val(meta),path(reads)` defined in the `input:` section within the `modules/local/readitandkeep/main.nf` file 
-- The second input is the `ch_reference` we just defined in the first code block
-    - This is the `path reference` defined in the `input:` section within the `modules/local/readitandkeep/main.nf` file 
+<details>
+<summary>Can you recall what the false value will do in the BWAMEM2_MEM script? </summary>
 
-> [!Note]
-> In contrast to the `FASTP` module in tutorial 2, we are not defining any output channels post `READITANDKEEP`.
-> The outputs from the `READITANDKEEP` module are not needed for any downstream process.
-> And so we do not need to emit any output channels in our workflow script. 
+<br>
 
-Save the file:
+It will set the samtools subcommand to `view` instead of `sort`.
 
-```
-ctrl + s
-```
+<br>
 
-Okay, we have everything we need now. Let's test the pipeline!
+</details>
 
-# Part IV: Testing the pipeline
+<br>
+
+Finally, we prepare the `BAM` channel for our tutorial next week, which will be used as input into our subworkflow. We capture this output channel in our workflow in a similar fashion that we did for `BWAMEM2_INDEX`, with the format `MODULENAME.out.emitName`. So for our pipeline, this would be `BWAMEM2_MEM.out.bam`. To properly capture this output channel, the `emitName` needs to match the file format we output from `samtools`, which for us happens to be `bam`.
+
+Recall all of the optional outputs for `BWAMEM2_MEM`:
+
+![BWAMEM2 mem optional outputs](images/bwamem2_outputs.png)
+
+# Part III: Testing the pipeline
 
 From the `launchDir`, `/workspaces/mdhhs_nextflow_training/`, download the sample:
 
@@ -824,47 +654,20 @@ Run the pipeline:
 bash run_nextflow_analysis.sh
 ```
 
-Nooooooooo, not another error! This one is stating that script compilation failed:
+Look at what I noticed when I launched my pipeline: 
 
-![Pipeline error](images/pipeline_error.png)
+![Run script](images/run_script.png)
 
-This error output is suggesting that this error is on line 50 of our `workflows/myfirstpipe.sh` script where `ch_reference` was input. 
-
-The error is so subtle. Try to figure out what we left out. Take a look at the `FASTP` module in this script for a hint! 
+The `BWAMEM2_INDEX` module appeared to have started and completed before other modules outlined in the pipleine. 
 
 <details>
-<summary>Reveal solution, here</summary>
+<summary>How is this possible? Think for a moment and then reveal the solution. </summary>
 
 <br>
 
-![Missing comma](images/missing_comma.png)
+Actual workflow organization in the `workflows/myfirstpipeline.nf` file doesn't matter. It's dependent on what the input channels are for a module and if those channels are currently available, independent of other modules running in the pipeline and where they are organized in the pipeline script.
 
-So small, yet so important!
-
-Edit: 
-
-```
-READITANDKEEP(
-    ch_samplesheet
-    ch_reference
-)
-```
-
-to 
-
-```
-READITANDKEEP(
-    ch_samplesheet,
-    ch_reference
-)
-```
-
-Then re-save the file:
-
-```
-ctrl + s
-```
-
+`BWAMEM2_INDEX` only requires `ch_reference` and this channel is established at the start of the pipeline, so the `BWAMEM2_INDEX` module can launch right away. 
 
 <br>
 
@@ -872,307 +675,190 @@ ctrl + s
 
 <br>
 
-Okay, now rerun the pipeline:
+Awesome! We see that the pipeline completed:
+
+![Pipeline complete](images/pipeline_complete.png)
+
+And if we navigate to the work directory for the `BWAMEM2_INDEX` module:
+
+![BWAMEM2_INDEX work dir](images/bwamem2_index_work.png)
+
+And run:
 
 ```
-bash run_nextflow_analysis.sh
+ll
+cat .command.sh
 ```
 
-Awesome, it looks like the pipeline completed!
+**Your `work/` directory hash to the BWAMEM2_INDEX and BWAMEM2_MEM modules will be different**
 
-![Pipeline success](images/pipeline_success.png)
+We see that our reference fasta was sourced from the `assets/` directory and the `ref_index/` directory was created from our script that was run, which contains the index files output from `BWAMEM2_INDEX`. 
 
+Likewise for the work directory for the `BWAMEM2_MEM` module:
 
-And if we navigate to the work directory for the `READITANDKEEP` process and view the `.command.sh` file:
+![BWAMEM2_MEM work dir](images/bwamem2_mem_work.png)
 
-![RIAK work dir](images/work_dir.png)
+We see that our trimmed reads were sourced from the `FASTP` module output, the reference fasta is again sourced from the `assets/` directory, and our `ref_index/` directory created from `BWAMEM2_INDEX` is being referenced, as well. The `SRR39817210.bam` file is the resulting file from this module.
 
-We see that the command for `readItAndKeep` is as expected, and is the same way we ran `readItAndKeep` outside of nextflow earlier in the tutorial.
+If you look at the shell script for the `BWAMEM2_MEM` module, you will notice the various inputs we defined in the `BWAMEM2_MEM` process main.nf script. Out of interest, I re-edited the `BWAMEM2_MEM` process main.nf script to echo the output of the `\$INDEX` shell variable:
 
-**Your `work/` directory hash to the READITANDKEEP process will be different**
+![BWAMEM2_MEM echo](images/bwamem2_echo.png)
 
-In addition, did you catch the two outputs from `ch_reference.view()` and `ch_trimmed_reads_view()`?
+I re-ran the analysis, and after completion, I navigated to the work directory and looked at the output of the shell script via:
 
-`ch_reference.view()` output:
+```
+cat .command.out
+```
 
-![ch_reference view](images/ref_view.png)
+![BWAMEM2_MEM command out](images/bwamem2_command_out.png)
 
-And is as expected because it's the path to the reference fasta file. 
+And we can see that `echo \$INDEX` = `./ref_index/MH356245.1.reference.fasta`, which essentially provides the base name to all index files contained within `ref_index`:
+- `MH356245.1.reference.fasta`.0123
+- `MH356245.1.reference.fasta`.amb
+- `MH356245.1.reference.fasta`.ann
+- `MH356245.1.reference.fasta`.bwt.2bit.64
+- `MH356245.1.reference.fasta`.fasta.pac
 
-`ch_trimmed_reads_view()` output:
+And lastly, if you navigate to the `results/` directory:
 
-![ch_trimmed_reads view](images/trimmed_view.png)
+```
+cd /workspaces/mdhhs_nextflow_training/results/
+```
 
-Maintains the `tuple val(meta) path (reads)` structure. We will use `ch_trimmed_reads` in tutorial 4 for the next module. 
+You will notice that the resulting files from `BWAMEM2_INDEX` and `BWAMEM2_MEM` have also been copied to this directory:
 
-# Recap
-
-- Congratulations! You just successfully created and implemented a new module to your pipeline. In doing so, we learned:
-    - How to use the nf-core CLI to create a new module
-    - The layout of a template module file, specifically `modules/local/readitandkeep/main.nf`and editing it to:
-        - define process directives, including sourcing the correct containers
-        - defining the expected inputs and outputs
-        - editing the script block, similar to how we used `readItAndKeep` outside of nextflow 
-    - How to incorporate the module into our workflow through editing of:
-        - the `assets/` directory: `assets/references/MH356245.1.reference.fasta` 
-        - the `nextflow.config` file to define our new `reference` parameter: `reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"`
-        - the workflow script, `workflows/myfirstpipeline.nf`, to create our reference channel, `ch_reference` and implement our `READITANDKEEP` module.
-
-
-I encourage you to go through the challenge section to learn more about nextflow `config` files. 
+![BWAMEM2 results](images/bwamem2_results.png)
 
 
-# Challenge: Exploring the priority of nextflow config files
+# Challenge: Add bowtie2 and a parameter to choose between aligners
 
-Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_3_challenge).
+Navigate to the GitHub repo for the nextflow tutorial, [here](https://github.com/JLC2141/mdhhs_nextflow_training/tree/tutorial_4_challenge).
 
-If you're relaunching your codespace, launch the `tutorial_3_challenge` branch to have all progress made prior in tutorial 3 so that you can jump directly into this challenge. 
+If you're relaunching your codespace, launch the `tutorial_4_challenge` branch to have all progress made prior in tutorial 4 so that you can jump directly into this challenge. 
 
 ![Challenge branch](images/challenge_branch.png)
 
-In this challenge, we will dive deeper into nextflow `config` files and see how we can override default parameters via `config` file priority. 
+We just implemented bwamem2 but sometimes you may want multiple tool options, possibly to compare and contrast performance of each tool. 
 
-Recall the edits we made to the `nextflow.config` file:
+Your challenge is to add another alignment tool, [bowtie2](https://github.com/benlangmead/bowtie2), to the pipeline and then provide an additional parameter, specified in our `custom_configs/training.config` file to choose the `bowtie2` aligner in our pipeline analysis.
 
-![nextflow.config edits](images/nextflow_config_edits.png)
+You will need to repeat the same steps we just performed in this tutorial. 
 
-We specified the path to our reference file as such: 
+- This includes:
+    - Using the nf-core CLI to install two modules associated with `bowtie2
+    - Edit the `main.nf` process script files for each module
+    - Edit `conf/modules.config` file to add parameters
+    - Edit the `workflows/myfirstpipeline.nf` script to import the modules, explicitly declare them in the workflow, and add an `if` statement for parameterization choice 
+    - Edit the custom_configs/training.config 
+
+
+I will post the solution on the `tutorial 5` branch in a week but I would like for you to really challenge yourself to implement this other tool with mimimal guidance.
+
+### Install the modules
+
+The modules are called `bowtie2/build` and `bowtie2/align`. 
+
+### Edit the main.nf files for both bowtie2_build and bowtie2_align
+
+Let's start with `BOWTIE2_BUILD`. `BOWTIE2_BUILD` is equivalent reference fasta indexing as performed in `BWAMEM2_INDEX`. Make similar edits that we did in `BWAMEM2_INDEX`.
+
+Hints
+- Change label to `process_low`
+- Remove the tuple from the `input:` block and `output:` block and just keep the `path()` element
+- Optional: change `bowtie2` output directory name to `ref_index`
+    - Will need to be changed at three locations in the script
+
+Next, edit `BOWTIE2_ALIGN`, which is equivalent to `BWAMEM2_MEM`. 
+
+Hints
+- Change label to `process_low`
+- Remove tuple and `meta2` and `meta3` from the `input:` block on the second and third inputs, respectively. 
+
+
+### Edit the conf/modules.config file 
+
+Add the same lines as we did for parameters for `BWAMEM2_MEM`, but now for `BOWTIE2_ALIGN`. Only add arguments for samtools via `ext.args2` as we did for `BWAMEM2_MEM`. Keep `ext.args` blank for default parameters.
+
+
+### Edit the workflows/myfirstpipeline.nf file
+
+Hints
+- Don't forget to import the new modules
+- You will need to establish an `if-else` statement to create a parameter for aligner tool option.
+    - Use the framework as shown below
+    - Also note that `BOWTIE2_ALIGN` contains one additional input compared to `BWAMEM2_MEM`. 
+        - This happens to be another boolean value that will keep (`true`) or discard (`false`) unaligned reads
+        - See nf-core documentation for `BOWTIE2_ALIGN`, [here](https://nf-co.re/modules/bowtie2_align/)
+
+```
+if( params.bowtie2_aligner ) {
+        //
+        // MODULE: Run BOWTIE2 to index reference genome
+        //
+        BOWTIE2_BUILD (
+            input_1
+        )
+        ch_index = BOWTIE2_BUILD.out.index
+    
+        //
+        // MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
+        //
+        BOWTIE2_ALIGN (
+            input_1,
+            input_2,
+            input_3,
+            input_4,
+            input_5
+        )
+        ch_aligned_bam = BOWTIE2_ALIGN.out.bam
+    } else {
+        //
+        // MODULE: Run BWAMEM2 to index reference genome
+        //
+        BWAMEM2_INDEX (
+            input_1
+        )
+        ch_index = BWAMEM2_INDEX.out.index
+    
+        //
+        // MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
+        //
+        BWAMEM2_MEM (
+            input_1,
+            input_2,
+            input_3,
+            input_4
+        )
+        ch_aligned_bam = BWAMEM2_MEM.out.bam
+    }
+```
+
+
+### Edit custom config
+
+Lastly, we will need to edit the custom config file created from the challenge in `tutorial 3`. This file is located in: `/workspaces/mdhhs_nextflow_training/custom_configs/training.config`
+
+Edit this file as follows:
 
 ```
 params {
     reference = "${projectDir}/assets/references/MH356245.1.reference.fasta"
+    bowtie2_aligner = true
 }
 ```
 
-So at the moment, when we run our pipeline in its current form, params.reference is pointing to `MH356245.1.reference.fasta`, which is the measles genotype D8 reference file.
+### Re-run the analysis
 
-Let's go ahead and download the other two genotype reference fasta files to the `assets/reference/` directory. From our `launchDir`, navigate to `nf-core-myfirstpipeline/assets/reference/`
+If all is well, you will now notice that `BOWTIE2` launches during analysis. Once completed, try changing `bowtie2_aligner = true` to `bowtie2_aligner = false` in the custom config file to convince yourself that `BWAMEM2` is now the chosen aligner tool upon a pipelin re-run. 
 
-```
-cd nf-core-myfirstpipeline/assets/references/
-```
 
-![nav ref](images/nav_ref.png)
+# Recap 
 
-Obtain the genotype A reference file:
+In this tutorial, we have:
+- Added two new modules to index our reference fasta file and align our reads 
+- Navigated nextflow file/directory structure to implement our new modules into our pipeline
+- Learned more about nextflow groovy syntax
+- Added a second aligner tool along with the addition of a new parameter to select between aligner tools
 
-```
-wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/A/FJ211590.fasta
-```
+So far, we have been building our pipeline with the addition of modules, only. In tutorial 5, we will continue building our pipeline with the implementation of a subworkflow. 
 
-And the genotype B3 reference fasta file:
-
-```
-wget https://raw.githubusercontent.com/phac-nml/measeq/refs/heads/main/assets/reference/B3/MK513622.1.reference.fasta
-```
-
-![wget refs](images/wget_refs.png)
-
-Now navigate back to the `launchDir` and make a file called `tutorial.config`
-
-```
-cd /workspaces/mdhhs_nextflow_training/
-touch training.config
-```
-
-Select the `tutorial.config` file in the file explorer panel to open the editor and place the following code in the file:
-
-```
-params {
-    reference = "${projectDir}/assets/references/MK513622.1.reference.fasta"
-}
-```
-
-Note how we are now providing the path to the B3 genotype reference fasta file and creating the parameter `reference` again via the `params {}` encapsulation. 
-
-Save the file:
-
-```
-ctrl + s
-```
-
-![Training config](images/training_config.png)
-
-Now, select the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
-
-```
-nextflow run nf-core-myfirstpipeline/main.nf \
-    -profile docker \
-    --input samplesheet.csv \
-    --outdir results \
-    -c training.config
-```
-
-> [!Note]
-> Make sure that you only use one dash for the `-c` in `-c training.config`
-
-![Run nextflow edits](images/run_nextflow_edit.png)
-
-We are adding a break line (`\`) to the `--outdir results` line and adding the `-c training.config` line just below it. 
-
-Save the file:
-
-```
-ctrl + s
-```
-
-From the `launchDir`, `/workspaces/mdhhs_nextflow_training/`, download the sample:
-
-```
-bash sample_download.sh
-```
-
-Create the `samplesheet.csv` file
-
-```
-python3 fastq_dir_to_samplesheet.py reads/ samplesheet.csv
-```
-
-Run the pipeline:
-
-```
-bash run_nextflow_analysis.sh
-```
-
-Upon pipeline launch, you'll notice a couple things. First, our config file is listed in the `Core Nextflow options` section
-
-![configFiles](images/config_launch.png)
-
-And second, because we still have the `ch_reference.view()` operator in our workflow script, we see the reference that is used in our pipeline:
-
-![ref b3](images/b3_ref.png)
-
-Whoa! It changed! The reference used to be genotype D8 (`MH356245.1.reference.fasta`) but now it's genotype B3 (`MK513622.1.reference.fasta`), the one we specified in the `training.config` file, **even though reference genotype D8 (`MH356245.1.reference.fasta`) is still specified as a `reference` parameter in `nextflow.config`**.
-
-And if you really want to convince yourself of this, navigate to the `READITANDKEEP` task in your `work` directory and view the `.command.sh` file.
-
-![ref b3 confirm](images/ref_b3_confirm.png)
-
-**Your `work/` directory hash to the READITANDKEEP process will be different**
-
-Okay, let's have some fun and try something else. From our `launchDir`, `/workspaces/mdhhs_nextflow_training/`, make a new file called `params.yml`:
-
-```
-touch params.yml
-```
-
-Now, select the `params.yml` file in the file explorer panel to open the editor and add the following code:
-
-
-```
-reference: "${projectDir}/assets/references/FJ211590.fasta"
-```
-
-Note how we are now providing the path to the genotype A reference fasta file and creating the parameter `reference`, though slightly different than the way we just did it in the `training.config` file. But this is just expected formatting for these two different file types. Both achieve the same end goal of making a `reference` parameter. 
-
-![params yml](images/params_yml.png)
-
-Save the file:
-
-```
-ctrl + s
-```
-
-Reopen the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
-
-
-```
-nextflow run nf-core-myfirstpipeline/main.nf \
-    -profile docker \
-    --input samplesheet.csv \
-    --outdir results \
-    -c training.config \
-    -params-file params.yml
-```
-> [!Note]
-> Make sure that you only use one dash at the front of `params-file` in `-params-file params.yml`
-
-![run edit again](images/run_edit_again.png)
-
-We are adding a break line (`\`) to the `-c training.config` line and adding the `--params-file params.yml` line just below it. 
-
-Save the file:
-
-```
-ctrl + s
-```
-
-Restart the nextflow pipeline: 
-
-```
-bash run_nextflow_analysis.sh
-```
-
-What is this magic? Now we see that the reference file for `params.reference` points to the genotype A reference file, **even though reference genotype D8 (`MH356245.1.reference.fasta`) is still specified as a `reference` parameter in `nextflow.config` and, reference genotype B3 (`MK513622.1.reference.fasta`) is still specified as a `reference` parameter in the `training.config` file.**
-
-![ref a](images/ref_a.png)
-
-And if you really want to convince yourself of this, navigate to the `READITANDKEEP` task in your `work` directory and view the `.command.sh` file.
-
-![ref A confirm](images/ref_a_confirm.png)
-
-**Your `work/` directory hash to the READITANDKEEP process will be different**
-
-Well, I'm sorry to break it to you, but this isn't magic. This is how nextflow was built to prioritize various configuration files. The priority, from highest to lowest is as follows:
-
-![Config priority](images/config_priority.png)
-
-Focusing on the top four configuration types:
-
-command line `--specified_parameter` > `-params-file params.yml` > `-c custom.config` > `nextflow.config`
-
-Meaning, these are ways to override exisiting parameters in our pipeline by placing these parameters in one of these configuration formats that have higher priority. That is why the `reference` parameter for specifying the reference file for genotype B3 took priority in the `training.config` file over the `reference` parameter for specifying the reference file for genotype D8 in the `nextflow.config` file. And then the `reference` parameter for specifying the reference file for genotype A took priority in the `params.yml` file over both `training.config` and `nextflow.config`.
-
-Find more information on this prioritization [here](https://docs.seqera.io/nextflow/config) and [here](https://ggrimes.github.io/workflows-nextflow/08-configuration/index.html#how-configuration-files-are-combined)
-
-A variety, and prioritization, of config files allows you to tailor your workflow toward your needs. The highest priority is specifying a parameter directory on the command link invocation of the nextflow pipeline via `nextflow run`. 
-
-For example, let's try to get our D8 genotype back as our `reference` parameter. Reopen the `run_nextflow_analysis.sh` file in the file explorer panel to open the editor and edit the file as follows:
-
-
-```
-nextflow run nf-core-myfirstpipeline/main.nf \
-    -profile docker \
-    --input samplesheet.csv \
-    --outdir results \
-    -c training.config \
-    -params-file params.yml \
-    --reference '/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline/assets/references/MH356245.1.reference.fasta'
-```
-
-![run edit final](images/run_edit_final.png)
-
-We are adding a break line (`\`) to the `-params-file params.yml` line and adding the `--reference '/workspaces/mdhhs_nextflow_training/nf-core-myfirstpipeline/assets/references/MH356245.1.reference.fasta'` line just below it. 
-
-Save the file:
-
-```
-ctrl + s
-```
-
-Restart the nextflow pipeline: 
-
-```
-bash run_nextflow_analysis.sh
-```
-
-And voila, our genotype D8 reference file returns as the `reference` parameter.
-
-
-![ref d8](images/ref_d8.png)
-
-
-But do you notice the big drawback to this method of defining the `--reference` parameter via the command line? We need to define the whole path for the reference file. In this case, `${projectDir}/assets/references/MH356245.1.reference.fasta'` doesn't work. Other built in nextflow features, like `-params-file params.yml` and a custom config file `-c training.config` are meant to function inside of nextflow so nextflow core options, like `projectDir` are useable inside of those config files. 
-
-Parameters requiring a path are not ideal as a parameter specified within the `nextflow run` command line. But for the purpose of this challenge, I just wanted to demonstrate how nextflow prioritizes config files and parameter overrides. 
-
-So in summary, we learned two major things about configuration files from this tutorial. 
-
-1) You can make as many `config` files as you want to be imported into `nextflow.config`
-    - `base.config`
-    - `modules.config`
-    - `references.config`
-
-It's just an organizational preference. 
-
-2) Nextflow prioritizes config files such that it can be used to override parameters in your pipeline.
