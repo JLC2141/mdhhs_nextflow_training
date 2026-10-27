@@ -438,9 +438,9 @@ The matcher produces a list-like result for each match. So let's break this down
 ]
 ```
 
-So with ` def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`, a match would exist. 
-`extension_matcher[0]` = `['-O cram', '-O', 'cram']` and then `extension_matcher[0][2]` = `cram`. 
-`.toLowerCase()` would also result in `cram`, and this would utimately become the value of the `extension` variable. 
+So with ` def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`, a match would exist. <br>
+`extension_matcher[0]` = `['-O cram', '-O', 'cram']` and then `extension_matcher[0][2]` = `cram`. <br>
+`.toLowerCase()` would also result in `cram`, and this would utimately become the value of the `extension` variable. <br>
 
 
 Again, if there is no match, the file format defaults to `bam`, which is exactly what we want for the purposes of our pipeline.
