@@ -40,7 +40,8 @@ process BWAMEM2_MEM {
     }
     """
     INDEX=`find -L ./ -name "*.amb" | sed 's/\\.amb\$//'`
-
+    echo \$INDEX
+    
     bwa-mem2 \\
         mem \\
         ${args} \\

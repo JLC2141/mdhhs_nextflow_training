@@ -5,6 +5,16 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "bowtie2/align": {
+                        "branch": "master",
+                        "git_sha": "8278e3c8a48427f7c26754128eba4907b8318878",
+                        "installed_by": ["modules"]
+                    },
+                    "bowtie2/build": {
+                        "branch": "master",
+                        "git_sha": "8278e3c8a48427f7c26754128eba4907b8318878",
+                        "installed_by": ["modules"]
+                    },
                     "bwamem2/index": {
                         "branch": "master",
                         "git_sha": "8327445b5266b0df32212e5c27407546d100429f",

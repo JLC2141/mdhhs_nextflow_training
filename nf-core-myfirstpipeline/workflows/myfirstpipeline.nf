@@ -9,6 +9,8 @@ include { FASTP                      } from '../modules/nf-core/fastp/main'
 include { FASTQC as FASTQC_TRIMMED   } from '../modules/nf-core/fastqc/main'
 include { BWAMEM2_INDEX              } from '../modules/nf-core/bwamem2/index/main'
 include { BWAMEM2_MEM                } from '../modules/nf-core/bwamem2/mem/main'
+include { BOWTIE2_BUILD              } from '../modules/nf-core/bowtie2/build/main'
+include { BOWTIE2_ALIGN              } from '../modules/nf-core/bowtie2/align/main'                                                                                                              
 include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -69,25 +71,47 @@ workflow MYFIRSTPIPELINE {
     //
     FASTQC_TRIMMED(ch_trimmed_reads)
 
-    //
-    // MODULE: Run BWAMEM2 to index reference genome
-    //
-    BWAMEM2_INDEX (
-        ch_reference
-    )
-    ch_index = BWAMEM2_INDEX.out.index
+    if( params.bowtie2_aligner ) {
+        //
+        // MODULE: Run BOWTIE2 to index reference genome
+        //
+        BOWTIE2_BUILD (
+            ch_reference
+        )
+        ch_index = BOWTIE2_BUILD.out.index
     
-    //
-    // MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
-    //
-    BWAMEM2_MEM (
-        ch_trimmed_reads,
-        ch_index,
-        ch_reference,
-        false
-    )
-    ch_aligned_bam = BWAMEM2_MEM.out.bam
+        //
+        // MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
+        //
+        BOWTIE2_ALIGN (
+            ch_trimmed_reads,
+            ch_index,
+            ch_reference,
+            false,
+            false
+        )
+        ch_aligned_bam = BOWTIE2_ALIGN.out.bam
+    } else {
+        //
+        // MODULE: Run BWAMEM2 to index reference genome
+        //
+        BWAMEM2_INDEX (
+            ch_reference
+        )
+        ch_index = BWAMEM2_INDEX.out.index
     
+        //
+        // MODULE: Run BWAMEM2 to align reads to reference genome and output BAM file
+        //
+        BWAMEM2_MEM (
+            ch_trimmed_reads,
+            ch_index,
+            ch_reference,
+            false
+        )
+        ch_aligned_bam = BWAMEM2_MEM.out.bam
+    }
+
     //
     // Collate and save software versions
     //
