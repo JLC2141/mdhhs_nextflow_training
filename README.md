@@ -421,7 +421,7 @@ So let's visualize this from the top. Let's say hypothetically that my `ext.args
 ext.args2 = '-f 3 -O cram'
 ```
 
-Then with `def extension_pattern` still set as `/(--output-fmt|-O)+\s+(\S+)/`, `def extension_matcher` = (args2 =~ extension_pattern) would output the following:
+Then with `def extension_pattern` still set as `/(--output-fmt|-O)+\s+(\S+)/`, `def extension_matcher` = `(args2 =~ extension_pattern)` would output the following:
 
 ```
 [-O cram, -O, cram]
@@ -438,7 +438,9 @@ The matcher produces a list-like result for each match. So let's break this down
 ]
 ```
 
-So with ` def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`, a match would exist. `extension_matcher[0]` = `['-O cram', '-O', 'cram']` and then `extension_matcher[0][2]` = `cram`. `.toLowerCase()` would also result in `cram`, and this would utimately become the value of the `extension` variable. 
+So with ` def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"`, a match would exist. 
+`extension_matcher[0]` = `['-O cram', '-O', 'cram']` and then `extension_matcher[0][2]` = `cram`. 
+`.toLowerCase()` would also result in `cram`, and this would utimately become the value of the `extension` variable. 
 
 
 Again, if there is no match, the file format defaults to `bam`, which is exactly what we want for the purposes of our pipeline.
@@ -690,13 +692,13 @@ ll
 cat .command.sh
 ```
 
-**Your `work/` directory hash to the BWAMEM2_INDEX and BWAMEM2_MEM modules will be different**
-
 We see that our reference fasta was sourced from the `assets/` directory and the `ref_index/` directory was created from our script that was run, which contains the index files output from `BWAMEM2_INDEX`. 
 
 Likewise for the work directory for the `BWAMEM2_MEM` module:
 
 ![BWAMEM2_MEM work dir](images/bwamem2_mem_work.png)
+
+**Your `work/` directory hash to the BWAMEM2_INDEX and BWAMEM2_MEM modules will be different**
 
 We see that our trimmed reads were sourced from the `FASTP` module output, the reference fasta is again sourced from the `assets/` directory, and our `ref_index/` directory created from `BWAMEM2_INDEX` is being referenced, as well. The `SRR39817210.bam` file is the resulting file from this module.
 
@@ -738,9 +740,9 @@ If you're relaunching your codespace, launch the `tutorial_4_challenge` branch t
 
 ![Challenge branch](images/challenge_branch.png)
 
-We just implemented bwamem2 but sometimes you may want multiple tool options, possibly to compare and contrast performance of each tool. 
+We just implemented `bwamem2` as our aligner but sometimes you may want multiple tool options, possibly to compare and contrast performance of each tool. 
 
-Your challenge is to add another alignment tool, [bowtie2](https://github.com/benlangmead/bowtie2), to the pipeline and then provide an additional parameter, specified in our `custom_configs/training.config` file to choose the `bowtie2` aligner in our pipeline analysis.
+Your challenge is to add another alignment tool, [bowtie2](https://github.com/benlangmead/bowtie2), to the pipeline and then provide an additional parameter, specified in our `custom_configs/training.config` file to select between `bwamem2` or `bowtie2` as the read alignment tool in our pipeline analysis.
 
 You will need to repeat the same steps we just performed in this tutorial. 
 
