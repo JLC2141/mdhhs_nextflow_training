@@ -25,11 +25,6 @@
                         "git_sha": "8327445b5266b0df32212e5c27407546d100429f",
                         "installed_by": ["modules"]
                     },
-                    "bwameme/index": {
-                        "branch": "master",
-                        "git_sha": "b2e3a15eac3d6a82b49febf8e3e6d7a25893aa57",
-                        "installed_by": ["modules"]
-                    },
                     "fastp": {
                         "branch": "master",
                         "git_sha": "826a9b28d6da61097d60e1923bb8a2e51de3c5b4",
