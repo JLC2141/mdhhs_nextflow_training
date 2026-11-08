@@ -10,7 +10,9 @@ include { FASTQC as FASTQC_TRIMMED   } from '../modules/nf-core/fastqc/main'
 include { BWAMEM2_INDEX              } from '../modules/nf-core/bwamem2/index/main'
 include { BWAMEM2_MEM                } from '../modules/nf-core/bwamem2/mem/main'
 include { BOWTIE2_BUILD              } from '../modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN              } from '../modules/nf-core/bowtie2/align/main'                                                                                                              
+include { BOWTIE2_ALIGN              } from '../modules/nf-core/bowtie2/align/main'
+include { BAM_SORT_STATS_SAMTOOLS    } from '../subworkflows/nf-core/bam_sort_stats_samtools/main'
+include { SAMTOOLS_DEPTH             } from '../modules/nf-core/samtools/depth/main'
 include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -111,6 +113,23 @@ workflow MYFIRSTPIPELINE {
         )
         ch_aligned_bam = BWAMEM2_MEM.out.bam
     }
+
+    //
+    // SUBWORKFLOW: RUN SORT, REINDEX, AND RUN STATS ON BAM FILE
+    //
+    BAM_SORT_STATS_SAMTOOLS (
+        ch_aligned_bam,
+        ch_reference
+    )
+    ch_sorted_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
+
+    //
+    // MODULE: RUN SAMTOOLS DEPTH TO OBTAIN COVERAGE PER SITE
+    //
+    SAMTOOLS_DEPTH (
+        ch_sorted_bam
+    )
+    ch_coverage = SAMTOOLS_DEPTH.out.tsv
 
     //
     // Collate and save software versions
