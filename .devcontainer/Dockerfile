@@ -59,6 +59,7 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 ENV TZ=UTC
+ENV TZDIR=/usr/share/zoneinfo
 
 #WORKDIR /data
 WORKDIR /workspace
