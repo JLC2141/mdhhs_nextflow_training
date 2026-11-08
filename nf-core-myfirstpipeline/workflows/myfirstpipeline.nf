@@ -12,6 +12,7 @@ include { BWAMEM2_MEM                } from '../modules/nf-core/bwamem2/mem/main
 include { BOWTIE2_BUILD              } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN              } from '../modules/nf-core/bowtie2/align/main'
 include { BAM_SORT_STATS_SAMTOOLS    } from '../subworkflows/nf-core/bam_sort_stats_samtools/main'
+include { COVERAGEPLOT               } from '../modules/local/coverageplot/main'
 include { SAMTOOLS_DEPTH             } from '../modules/nf-core/samtools/depth/main'
 include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
@@ -130,6 +131,13 @@ workflow MYFIRSTPIPELINE {
         ch_sorted_bam
     )
     ch_coverage = SAMTOOLS_DEPTH.out.tsv
+
+    //
+    // MODULE: CREATE COVERAGE PLOT ACROSS GENOME
+    //
+    COVERAGEPLOT (
+        ch_coverage
+    )
 
     //
     // Collate and save software versions

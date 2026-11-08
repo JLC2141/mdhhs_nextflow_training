@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libgomp1 \
     curl \
+    tzdata \
     procps && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
@@ -57,6 +58,7 @@ ENV PATH="$PATH:/sratoolkit.${SRATOOLKIT_VER}-ubuntu64/bin"
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
+ENV TZ=UTC
 
 #WORKDIR /data
 WORKDIR /workspace
