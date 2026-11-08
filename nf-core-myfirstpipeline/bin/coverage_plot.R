@@ -16,13 +16,14 @@ prefix <- args[2]
 output_file <- paste0(prefix, "_coverage.png")
 
 #Read in coverage file
-cov <- read_tsv(
+cov <- read.csv(
   file = tsv_file,
-  col_names = FALSE
+  header = FALSE,
+  sep = "\t"
 ) %>%
   rename(
-    Position = X2,
-    Coverage = X3
+    Position = V2,
+    Coverage = V3
   )
 
 # Generate coverage plot
