@@ -691,7 +691,7 @@ The `bin/` directory is a built-in feature in Nextflow for running custom script
 
 `coverage_plot.R $coverage_tsv $prefix`
 
-This script, `coverage_plot.R`, will seamlessly exeucture in our `COVERAGEPLOT` module now that our script in contained with the `bin/` directory. You can add any custom script you want into the `bin/` directory and incorporate it into any custom module you create.
+This script, `coverage_plot.R`, will seamlessly execute in our `COVERAGEPLOT` module now that our script in contained with the `bin/` directory. You can add any custom script you want into the `bin/` directory and incorporate it into any custom module you create.
 
 
 > [Note!]
