@@ -401,7 +401,7 @@ Add the following lines just after the `BOWTIE2_ALIGN` module configs:
 
 ```
 withName: SAMTOOLS_DEPTH {
-    ext.args2 = '-a'
+    ext.args = '-a'
 }
 ```
 
@@ -464,7 +464,7 @@ ch_sorted_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
 // MODULE: RUN SAMTOOLS DEPTH TO OBTAIN COVERAGE PER SITE
 //
 SAMTOOLS_DEPTH (
-    ch_sorted_bam,
+    ch_sorted_bam
 )
 ch_coverage = SAMTOOLS_DEPTH.out.tsv
 
