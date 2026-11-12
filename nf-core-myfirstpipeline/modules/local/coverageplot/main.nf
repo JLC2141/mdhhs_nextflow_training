@@ -11,8 +11,8 @@ process COVERAGEPLOT {
     tuple val(meta), path(coverage_tsv)
 
     output:
-    tuple val(meta), path("*.pdf"), emit: pdf
-    //tuple val("${task.process}"), val('coverageplot'), eval("R --version"), topic: versions, emit: versions_coverageplot
+    tuple val(meta), path("*.pdf"), emit: pdf 
+    tuple val("${task.process}"), val('R'), eval('R --version | sed -n "1s/.* version //p"'), emit: versions_coverageplot, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
