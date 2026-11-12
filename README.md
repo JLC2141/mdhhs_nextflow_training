@@ -623,9 +623,14 @@ tuple val(meta), path(coverage_tsv)
 tuple val(meta), path("*.pdf"), emit: pdf
 ```
 
-And remove the second line within the `output:` block.
+And replace the second line within the `output:` block:
 
-(`tuple val("${task.process}"), val('coverageplot'), eval("coverageplot --version"), topic: versions, emit: versions_coverageplot`)
+`tuple val("${task.process}"), val('coverageplot'), eval("coverageplot --version"), topic: versions, emit: versions_coverageplot`
+
+with:
+
+`tuple val("${task.process}"), val('R'), eval('R --version | sed -n "1s/.* version //p"'), emit: versions_coverageplot, topic: versions`
+
 
 <br>
 
