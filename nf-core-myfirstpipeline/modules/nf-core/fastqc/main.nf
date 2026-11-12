@@ -9,6 +9,7 @@ process FASTQC {
 
     input:
     tuple val(meta), path(reads, stageAs: '?/*')
+    val qc_type
 
     output:
     tuple val(meta), path("*.html"), emit: html
@@ -22,7 +23,7 @@ process FASTQC {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     // Make list of old name and new name pairs to use for renaming in the bash while loop
-    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${index + 1}.${entry.extension}"] }
+    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}_${qc_type}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${qc_type}_${index + 1}.${entry.extension}"] }
     def rename_to = old_new_pairs*.join(' ').join(' ')
     def renamed_files = old_new_pairs.collect { _old_name, new_name -> new_name }.join(' ')
 
