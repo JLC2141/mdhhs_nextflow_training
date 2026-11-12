@@ -46,7 +46,10 @@ workflow MYFIRSTPIPELINE {
     // MODULE: Run FastQC on raw reads
     //
     //ch_samplesheet.view()
-    FASTQC_RAW(ch_samplesheet)
+    FASTQC_RAW(
+        ch_samplesheet, 
+        'raw'
+    )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.map{ _meta, file -> file })
 
     //
@@ -73,7 +76,11 @@ workflow MYFIRSTPIPELINE {
     //
     // MODULE: Run FASTQC on trimmed reads
     //
-    FASTQC_TRIMMED(ch_trimmed_reads)
+    FASTQC_TRIMMED(
+        ch_trimmed_reads,
+        'trimmed'
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMMED.out.zip.map{ _meta, file -> file })
 
     if( params.bowtie2_aligner ) {
         //
@@ -95,6 +102,8 @@ workflow MYFIRSTPIPELINE {
             false
         )
         ch_aligned_bam = BOWTIE2_ALIGN.out.bam
+        ch_multiqc_files = ch_multiqc_files.mix(BOWTIE2_ALIGN.out.log.map { _meta, file -> file })
+
     } else {
         //
         // MODULE: Run BWAMEM2 to index reference genome
@@ -124,6 +133,9 @@ workflow MYFIRSTPIPELINE {
         ch_reference
     )
     ch_sorted_bam = BAM_SORT_STATS_SAMTOOLS.out.bam
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.stats.map { _meta, file -> file })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.flagstat.map { _meta, file -> file })
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.map { _meta, file -> file })
 
     //
     // MODULE: RUN SAMTOOLS DEPTH TO OBTAIN COVERAGE PER SITE
