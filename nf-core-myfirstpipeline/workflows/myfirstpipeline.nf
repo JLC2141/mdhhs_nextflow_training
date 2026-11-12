@@ -67,7 +67,8 @@ workflow MYFIRSTPIPELINE {
         false
     )
     ch_trimmed_reads = FASTP.out.trimmed_reads
-    ch_trimmed_reads.view()
+    ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.html.map { _meta, file -> file })
+    ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.json.map { _meta, file -> file })
 
     //
     // MODULE: Run FASTQC on trimmed reads
