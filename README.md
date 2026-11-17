@@ -4,9 +4,8 @@
 - [Part I](#part-i-preparing-multiqc-report)
 - [Part II](#part-ii-alter-workflow-to-accommodate-fastqc-module-aliases-and-fix-multiqc-organization)
 - [Part III](#part-iii-downloading-running-and-troubleshooting-a-cdc-nextflow-pipeline)
-
-- [Challenge](#challenge-migrate-to-workflow-outputs)
-- [Recap](#recap)
+- [Challenge](#challenge-migrating-to-workflow-outputs)
+- [Extra resources](#extra-resources)
 
 # 📖 Overview
 
@@ -158,13 +157,15 @@ Looking back at the `main.nf` process script for `FASTQC` (`launchDir/nf-core-my
 
 We see that the `zip` file is emitted. That is why `FASTQC_RAW.out.zip` is added after `ch_multiqc_files.mix`
 
-But then why the following: `.map { _meta, file -> file }`?
+But then why the following: `.map{ _meta, file -> file }`?
 
 The [map](https://docs.seqera.io/nextflow/reference/operator#map) operator allows you to reorganize the structure of a channel. The `FASTQC_RAW.out.zip` channel is a tuple containing the metadata, `val(meta)` and the output file, `path("*.zip")`. 
 
-What `.map { _meta, file -> file }` is doing is accessing this channel and transforming the channel so that we only grab the file output `_meta, file > file`. MultiQC expects only the file, not the metadata. 
+`.map{ _meta, file -> file }` is accessing this channel and transforming the channel so that we only grab the file output `_meta, file > file`. MultiQC expects only the file, not the metadata. 
 
-Why `_meta` and `file`? Well, it's intuitive, but it's not necessary. We could have used: `.map {x, y > y }` and it would have worked the same. Because `_meta` (or `x`) and `file` (or `y`) are representing the first (`val(meta)`) and second (`path("*.zip")`) elements of the tuple respectively. Lastly `_meta` or `meta` works fine as well, however, underscores (`_`) in front of a variable is Groovy best coding practice and is used as a special identifier to mark intentionally unused variables. 
+Why `_meta` and `file`? Well, it's intuitive, but it's not necessary. We could have used: `.map {x, y > y }` and it would have worked the same. Because `_meta` (or `x`) and `file` (or `y`) are representing the first (`val(meta)`) and second (`path("*.zip")`) elements of the tuple, respectively. 
+
+Lastly `_meta` or `meta` works fine as well, however, underscore (`_`) in front of a variable is Groovy best coding practice and is used as a special identifier to mark intentionally unused variables. 
 
 To put it all together, this:
 
@@ -489,7 +490,7 @@ Where you can paste the URL you copied from the MIRA-NF GitHub repository after 
 
 ![mira release](images/pipeline_releases.png)
 
-You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your computer:
+You should see messages indicating that the clone is occurring. And once complete, you should see the repository present on your Codespace VM:
 
 ```
 ls Mira-nf
@@ -595,3 +596,32 @@ To use public health pipelines that aren't refactored yet, your options are:
 2) export NXF_SYNTAX_PARSER=v1 while it's still available as an option in Nextflow v26.04
 
 # Challenge: Migrating to workflow outputs
+
+Stay tuned...
+
+# Extra resources
+
+- Addtional nextflow trainings
+    - https://training.nextflow.io/latest/
+    - Created by the developers of Nextflow
+- Nextflow youtube channel
+    - https://www.youtube.com/@Nextflow
+- Nextflow slack channel
+    - [Join here](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=CAESZgHEIkXXLk86TfY8_61USAB-075Cym7xmwxeFApNyr2Tztlf03esPL1T9hhlHmalTdxL2wKzvbXYdFoWJ_E_aX30b6-SnU6ANQm6I4015H_5MFVnCWMSK3hVTlynJgnYf8l8w5eiwg&ved=2ahUKEwj3laSdzo-YAxV0GoAAHfWtLOIQFnoECA8QAQ&uoh=2&usg=AOvVaw2GiPr6_cRn66ImFBo8vEUE)
+- Other resources for getting help with Nextflow
+    - https://training.nextflow.io/latest/help/
+- CDC, SPHL, and nf-core nextflow GitHub repositories
+    - CDC
+        - [tbvarpipe](https://github.com/amd-ph-core/tbvarpipe)
+        - [PHoeNIx](https://github.com/CDCgov/phoenix)
+        - [MIRA](https://github.com/CDCgov/MIRA)
+    - SPHL
+        - [MDHHS](https://github.com/MDHHS-Bioinformatics?view_as=public)
+        - [UPHL-BioNGS](https://github.com/UPHL-BioNGS)
+        - [NW-PaGe](https://github.com/NW-PaGe)
+        - [Florida BPHL-Molecular](https://github.com/BPHL-Molecular)
+    - nf-core
+        - [viralrecon](https://github.com/nf-core/viralrecon)
+- Container repositories
+    - [StaPH-B docker hub](https://hub.docker.com/u/staphb)
+
